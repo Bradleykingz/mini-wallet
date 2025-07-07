@@ -1,6 +1,6 @@
 import {Db} from "@server/db";
 import {eq} from "drizzle-orm";
-import {User, users} from "@server/db/users";
+import {User, schema} from "@server/db/schema";
 import * as bcrypt from "bcrypt";
 
 export abstract class IAuthRepository {
@@ -18,8 +18,8 @@ export class AuthRepository extends IAuthRepository {
 
     async findOrCreate(email: string, password: string): Promise<User> {
         const userData = { email, password };
-        const existingUser = await this.db.query.users.findFirst({
-            where: eq(users.email, userData.email),
+        const existingUser = await this.db.query.schema.findFirst({
+            where: eq(schema.email, userData.email),
         });
 
         if (existingUser) {
@@ -28,7 +28,7 @@ export class AuthRepository extends IAuthRepository {
 
         const hashedPassword = await bcrypt.hash(userData.password, 100);
 
-        const [newUser] = await this.db.insert(users).values({
+        const [newUser] = await this.db.insert(schema).values({
             email: userData.email,
             password: hashedPassword,
         }).returning();
@@ -37,8 +37,8 @@ export class AuthRepository extends IAuthRepository {
     }
 
     async findByEmail(email: string): Promise<User | null> {
-        const user = await this.db.query.users.findFirst({
-            where: eq(users.email, email),
+        const user = await this.db.query.schema.findFirst({
+            where: eq(schema.email, email),
         });
 
         return user || null;

@@ -1,6 +1,6 @@
 import {drizzle, PostgresJsDatabase} from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
-import * as schema from './users';
+import * as schema from './schema';
 import 'dotenv/config';
 
 export type Db = PostgresJsDatabase<typeof schema> & {

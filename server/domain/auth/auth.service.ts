@@ -1,7 +1,6 @@
 import * as bcrypt from 'bcrypt';
 import {v4 as uuidv4} from "uuid";
-import 'dotenv/config';
-import {NewUser, users} from '@server/db/users';
+import {NewUser} from '@server/db/schema';
 import {IAuthRepository} from "@server/domain/auth/auth.repository";
 import {TokenHelper} from "@server/common/token.helper";
 
