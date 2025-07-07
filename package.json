@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "test-server": "jest server"
+    "test-server": "jest backend"
   },
   "dependencies": {
     "bcrypt": "^6.0.0",
