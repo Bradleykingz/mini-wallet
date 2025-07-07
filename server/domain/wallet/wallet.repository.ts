@@ -1,6 +1,7 @@
 import {Db} from '@server/db';
-import { wallets, transactions, NewTransaction } from '@server/db/schema';
-import { and, eq } from 'drizzle-orm';
+import {NewTransaction, transactions, wallets} from '@server/db/schema';
+import {eq} from 'drizzle-orm';
+import {Promise} from "@sinclair/typebox";
 
 export abstract class IWalletRepository {
     /**
@@ -8,6 +9,8 @@ export abstract class IWalletRepository {
      * This is useful to ensure every user has a wallet.
      */
     abstract findOrCreateWalletByUserId(userId: number): Promise<typeof wallets.$inferSelect>;
+
+    abstract findWalletById(walletId: number): Promise<typeof wallets.$inferSelect>;
 
     /**
      * Retrieves a user's transaction history.
@@ -37,9 +40,19 @@ export class WalletRepository extends IWalletRepository {
         });
 
         if (!wallet) {
-            const [newWallet] = await this.db.insert(wallets).values({ userId }).returning();
+            const [newWallet] = await this.db.insert(wallets).values({userId}).returning();
             wallet = newWallet;
         }
+
+        return wallet;
+    }
+
+    async findWalletById(walletId: number): Promise<typeof wallets.$inferSelect> {
+        const wallet = await this.db.query.wallets.findFirst({
+            where: eq(wallets.id, walletId),
+        });
+
+        if (!wallet) throw new Error('Wallet not found');
 
         return wallet;
     }
@@ -50,7 +63,7 @@ export class WalletRepository extends IWalletRepository {
     public async getTransactionHistory(walletId: number) {
         return this.db.query.transactions.findMany({
             where: eq(transactions.walletId, walletId),
-            orderBy: (transactions, { desc }) => [desc(transactions.createdAt)],
+            orderBy: (transactions, {desc}) => [desc(transactions.createdAt)],
             limit: 50, // Add pagination in a real app
         });
     }
@@ -94,8 +107,12 @@ export class WalletRepository extends IWalletRepository {
                 .where(eq(wallets.id, data.walletId))
                 .returning();
 
+            const referenceId = crypto.randomUUID();
             // 4. Record the transaction in the audit log
-            await tx.insert(transactions).values(data);
+            await tx.insert(transactions).values({
+                ...data,
+                referenceId,
+            });
 
             return updatedWallet;
         });

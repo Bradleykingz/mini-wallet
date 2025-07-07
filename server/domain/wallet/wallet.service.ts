@@ -8,7 +8,7 @@ function getBalanceCacheKey(walletId: number): string {
 }
 
 export abstract class IWalletService {
-    abstract getBalance(userId: number): Promise<{ balance: string, source: 'cache' | 'db' }>;
+    abstract getBalance(userId: number): Promise<{ balance: string, currency: string, source: 'cache' | 'db' }>;
 
     abstract credit(userId: number, amount: number, description?: string): Promise<any>;
 
@@ -34,8 +34,8 @@ export class WalletService extends IWalletService {
     /**
      * Gets the wallet balance and currency. Tries cache first.
      */
-    public async getBalance(userId: number): Promise<{ balance: string; currency: string; source: 'cache' | 'db' }> {
-        const cacheKey = getBalanceCacheKey(userId);
+    public async getBalance(walletId: number): Promise<{ balance: string; currency: string; source: 'cache' | 'db' }> {
+        const cacheKey = getBalanceCacheKey(walletId);
         const cachedData = await this.inMemoryClient.get(cacheKey);
 
         if (cachedData) {
@@ -43,7 +43,7 @@ export class WalletService extends IWalletService {
             return {balance, currency, source: 'cache'};
         }
 
-        const wallet = await this.walletRepository.findOrCreateWalletByUserId(userId);
+        const wallet = await this.walletRepository.findWalletById(walletId);
         const dataToCache: CachedBalance = {balance: wallet.balance, currency: wallet.currency};
 
         // Store the fresh balance and currency in the cache as a JSON string
@@ -55,12 +55,12 @@ export class WalletService extends IWalletService {
     /**
      * Handles a credit transaction and updates the cache.
      */
-    public async credit(userId: number, amount: number, description?: string) {
+    public async credit(walletId: number, amount: number, description?: string) {
         if (amount <= 0) {
             throw new Error('Credit amount must be positive.');
         }
 
-        const wallet = await this.walletRepository.findOrCreateWalletByUserId(userId);
+        const wallet = await this.walletRepository.findWalletById(walletId);
 
         const updatedWallet = await this.walletRepository.createTransaction({
             walletId: wallet.id,
@@ -83,12 +83,12 @@ export class WalletService extends IWalletService {
     /**
      * Handles a debit transaction and updates the cache.
      */
-    public async debit(userId: number, amount: number, description?: string) {
+    public async debit(walletId: number, amount: number, description?: string) {
         if (amount <= 0) {
             throw new Error('Debit amount must be positive.');
         }
 
-        const wallet = await this.walletRepository.findOrCreateWalletByUserId(userId);
+        const wallet = await this.walletRepository.findWalletById(walletId);
 
         const updatedWallet = await this.walletRepository.createTransaction({
             walletId: wallet.id,
@@ -108,8 +108,8 @@ export class WalletService extends IWalletService {
     /**
      * Gets the last 50 transactions. The limit is handled by the repository.
      */
-    public async getTransactionHistory(userId: number) {
-        const wallet = await this.walletRepository.findOrCreateWalletByUserId(userId);
+    public async getTransactionHistory(walletId: number) {
+        const wallet = await this.walletRepository.findOrCreateWalletByUserId(walletId);
         return this.walletRepository.getTransactionHistory(wallet.id);
     }
 }

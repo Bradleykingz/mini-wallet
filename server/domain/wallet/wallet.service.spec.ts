@@ -5,6 +5,7 @@ import {InMemoryClient} from '@server/platform/in-memory/in-memory.client';
 // Mock the dependencies
 const mockWalletRepository: jest.Mocked<IWalletRepository> = {
     findOrCreateWalletByUserId: jest.fn(),
+    findWalletById: jest.fn(),
     createTransaction: jest.fn(),
     getTransactionHistory: jest.fn(),
 };
@@ -26,15 +27,15 @@ describe('WalletService', () => {
 
     describe('getBalance', () => {
         it('should return balance from cache if available', async () => {
-            const userId = 1;
+            const walletId = 1;
             const cachedBalance = '100.0000';
-            mockInMemoryClient.get.mockResolvedValue(cachedBalance);
+            mockInMemoryClient.get.mockResolvedValue(JSON.stringify({balance: cachedBalance, currency: "USD"}));
 
-            const result = await walletService.getBalance(userId);
+            const result = await walletService.getBalance(walletId);
 
-            expect(result).toEqual({balance: cachedBalance, source: 'cache'});
-            expect(mockInMemoryClient.get).toHaveBeenCalledWith(`wallet:balance:${userId}`);
-            expect(mockWalletRepository.findOrCreateWalletByUserId).not.toHaveBeenCalled();
+            expect(result).toEqual({balance: cachedBalance, currency: "USD", source: 'cache'});
+            expect(mockInMemoryClient.get).toHaveBeenCalledWith(`wallet:${walletId}:balance`);
+            expect(mockWalletRepository.findWalletById).not.toHaveBeenCalled();
         });
 
         it('should return balance from db and set cache if not available in cache', async () => {
@@ -48,14 +49,14 @@ describe('WalletService', () => {
                 currency: 'USD' as "USD"
             };
             mockInMemoryClient.get.mockResolvedValue(null);
-            mockWalletRepository.findOrCreateWalletByUserId.mockResolvedValue(wallet);
+            mockWalletRepository.findWalletById.mockResolvedValue(wallet);
 
             const result = await walletService.getBalance(userId);
 
-            expect(result).toEqual({balance: wallet.balance, source: 'db'});
-            expect(mockInMemoryClient.get).toHaveBeenCalledWith(`wallet:balance:${userId}`);
-            expect(mockWalletRepository.findOrCreateWalletByUserId).toHaveBeenCalledWith(userId);
-            expect(mockInMemoryClient.set).toHaveBeenCalledWith(`wallet:balance:${userId}`, wallet.balance, {EX: 300});
+            expect(result).toEqual({balance: wallet.balance, currency: 'USD', source: 'db'});
+            expect(mockInMemoryClient.get).toHaveBeenCalledWith(`wallet:${wallet.id}:balance`);
+            expect(mockWalletRepository.findWalletById).toHaveBeenCalledWith(userId);
+            expect(mockInMemoryClient.set).toHaveBeenCalledWith(`wallet:${wallet.id}:balance`, JSON.stringify({balance: wallet.balance, currency: wallet.currency}), {EX: 300});
         });
     });
 
@@ -87,12 +88,16 @@ describe('WalletService', () => {
             expect(result).toEqual(updatedWallet);
             expect(mockWalletRepository.findOrCreateWalletByUserId).toHaveBeenCalledWith(userId);
             expect(mockWalletRepository.createTransaction).toHaveBeenCalledWith({
-                walletId: wallet.id,
+                walletId: updatedWallet.id,
+                currency: updatedWallet.currency,
                 amount: amount.toFixed(4),
                 type: 'credit',
                 description,
             });
-            expect(mockInMemoryClient.set).toHaveBeenCalledWith(`wallet:balance:${userId}`, updatedWallet.balance, {EX: 300});
+            expect(mockInMemoryClient.set).toHaveBeenCalledWith(`wallet:${wallet.id}:balance`, JSON.stringify({
+                balance: updatedWallet.balance,
+                currency: updatedWallet.currency
+            }), {EX: 300});
         });
     });
 
@@ -103,12 +108,12 @@ describe('WalletService', () => {
         });
 
         it('should debit the wallet and update the cache', async () => {
-            const userId = 1;
+            const walletId = 1;
             const amount = 30;
             const description = 'Purchase';
             const wallet = {
                 id: 1,
-                userId,
+                userId: walletId,
                 balance: '150.0000',
                 createdAt: new Date(),
                 updatedAt: new Date(),
@@ -119,17 +124,21 @@ describe('WalletService', () => {
             mockWalletRepository.findOrCreateWalletByUserId.mockResolvedValue(wallet);
             mockWalletRepository.createTransaction.mockResolvedValue(updatedWallet);
 
-            const result = await walletService.debit(userId, amount, description);
+            const result = await walletService.debit(walletId, amount, description);
 
             expect(result).toEqual(updatedWallet);
-            expect(mockWalletRepository.findOrCreateWalletByUserId).toHaveBeenCalledWith(userId);
+            expect(mockWalletRepository.findOrCreateWalletByUserId).toHaveBeenCalledWith(walletId);
             expect(mockWalletRepository.createTransaction).toHaveBeenCalledWith({
                 walletId: wallet.id,
+                currency: "USD",
                 amount: amount.toFixed(4),
                 type: 'debit',
                 description,
             });
-            expect(mockInMemoryClient.set).toHaveBeenCalledWith(`wallet:balance:${userId}`, updatedWallet.balance, {EX: 300});
+            expect(mockInMemoryClient.set).toHaveBeenCalledWith(`wallet:${walletId}:balance`, JSON.stringify({
+                balance: updatedWallet.balance,
+                currency: updatedWallet.currency
+            }), {EX: 300});
         });
     });
 
@@ -151,6 +160,9 @@ describe('WalletService', () => {
                 currency: 'USD' as "USD",
                 type: 'credit' as "credit" | "debit",
                 description: 'Top-up',
+                referenceId: "",
+                status: "" as "pending" | "completed" | "failed",
+                externalProviderId: "",
                 createdAt: new Date(),
                 updatedAt: new Date()
             }];

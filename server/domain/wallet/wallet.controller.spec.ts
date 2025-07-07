@@ -33,7 +33,7 @@ describe('WalletController', () => {
   describe('GET /balance', () => {
     it('should return the wallet balance with a 200 status code', async () => {
       req = { user: { sub: 1 } }; // Mock user from JWT
-      const balanceData = { balance: '100.0000', source: 'db' as "cache" | "db" };
+      const balanceData = { balance: '100.0000', currency: "USD", source: 'db' as "cache" | "db" };
       mockWalletService.getBalance.mockResolvedValue(balanceData);
 
       await walletController.getBalance(req as Request, res);

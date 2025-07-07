@@ -21,15 +21,20 @@ export const wallets = pgTable('wallets', {
     updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
 
-export const transactionTypeEnum = pgEnum('transaction_type', ['credit', 'debit']);
+export const transactionTypeEnum = pgEnum('transaction_type', ['credit', 'debit', 'cash_in', 'cash_out']);
+
+export const transactionStatusEnum = pgEnum('transaction_status', ['pending', 'completed', 'failed']);
 
 export const transactions = pgTable('transactions', {
     id: serial('id').primaryKey(),
+    referenceId: text('reference_id').notNull().unique(),
     walletId: integer('wallet_id').notNull().references(() => wallets.id, {onDelete: 'cascade'}),
     type: transactionTypeEnum('type').notNull(),
+    status: transactionStatusEnum('status').default('pending').notNull(),
     amount: numeric('amount', {precision: 19, scale: 4}).notNull(),
-    currency: currencyEnum('currency').default('USD').notNull(),
+    currency: currencyEnum('currency').notNull(),
     description: text('description'),
+    externalProviderId: text('external_provider_id'),
     createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 
