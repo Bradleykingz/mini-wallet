@@ -1,11 +1,9 @@
-import { eq } from 'drizzle-orm';
 import * as bcrypt from 'bcrypt';
-import * as jwt from 'jsonwebtoken';
-import { v4 as uuidv4 } from 'uuid';
+import {v4 as uuidv4} from "uuid";
 import 'dotenv/config';
-import {NewUser, users} from '../../db/users';
-import {db} from "../../db";
-import {redisService} from "../../common/redis";
+import {NewUser, users} from '@server/db/users';
+import {IAuthRepository} from "@server/domain/auth/auth.repository";
+import {TokenHelper} from "@server/common/token.helper";
 
 // Exclude password from user object returned to client
 function toUserResponse(user: NewUser) {
@@ -16,38 +14,20 @@ function toUserResponse(user: NewUser) {
 export class AuthService {
     private readonly jwtSecret = process.env.JWT_SECRET!;
     private readonly jwtExpiration = process.env.JWT_EXPIRATION!;
-    private readonly saltRounds = parseInt(process.env.BCRYPT_SALT_ROUNDS!, 10);
-    private readonly tokenExpirySeconds = parseInt(process.env.TOKEN_EXPIRY_SECONDS!, 10);
 
-    constructor() {
+    constructor(private authRepository: IAuthRepository, private tokenService: TokenHelper) {
         if (!this.jwtSecret || !this.jwtExpiration) {
             throw new Error('JWT environment variables not set');
         }
     }
 
     async register(userData: Pick<NewUser, 'email' | 'password'>) {
-        const existingUser = await db.query.users.findFirst({
-            where: eq(users.email, userData.email),
-        });
-
-        if (existingUser) {
-            throw new Error('User with this email already exists');
-        }
-
-        const hashedPassword = await bcrypt.hash(userData.password, this.saltRounds);
-
-        const [newUser] = await db.insert(users).values({
-            email: userData.email,
-            password: hashedPassword,
-        }).returning();
-
-        return toUserResponse(newUser);
+        const data = await this.authRepository.findOrCreate(userData.email, userData.password);
+        return toUserResponse(data);
     }
 
     async login(credentials: Pick<NewUser, 'email' | 'password'>) {
-        const user = await db.query.users.findFirst({
-            where: eq(users.email, credentials.email),
-        });
+        const user = await this.authRepository.findByEmail(credentials.email);
 
         if (!user) {
             throw new Error('Invalid email or password');
@@ -58,27 +38,22 @@ export class AuthService {
             throw new Error('Invalid email or password');
         }
 
-        // 1. Generate JWT with a unique token ID (jti)
         const jti = uuidv4();
-        const token = jwt.sign(
-            { sub: user.id, email: user.email },
-            this.jwtSecret, {
-                jwtid: jti,
-                expiresIn: parseInt(this.jwtExpiration)
-            }
-        );
 
-        // 2. Store JTI in Redis with the same expiry as the token
-        await redisService.storeJti(jti, user.id, this.tokenExpirySeconds);
+        const token = this.tokenService.generateToken(jti, {
+            id: user.id,
+            email: user.email,
+        });
+
+        await this.tokenService.storeJti(jti, user.id, parseInt(this.jwtExpiration, 10));
 
         return {
-            user: toUserResponse(user),
             accessToken: token,
         };
     }
 
     async logout(jti: string): Promise<void> {
         // 3. On logout, clear the JTI from Redis
-        await redisService.clearJti(jti);
+        await this.tokenService.clearJti(jti);
     }
 }

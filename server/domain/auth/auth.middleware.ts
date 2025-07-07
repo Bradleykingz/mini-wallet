@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import * as jwt from 'jsonwebtoken';
 import 'dotenv/config';
-import {redisService} from "../../common/redis";
+import {TokenHelper} from "@server/common/token.helper";
 
 // Augment Express's Request type to include our custom properties
 declare global {
@@ -14,6 +14,7 @@ declare global {
 }
 
 export async function authMiddleware(req: Request, res: Response, next: NextFunction) {
+    const tokenService: TokenHelper = res.app.get('tokenService');
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
 
@@ -29,7 +30,7 @@ export async function authMiddleware(req: Request, res: Response, next: NextFunc
         }
 
         // Check if JTI exists in Redis (i.e., not logged out)
-        const isStored = await redisService.isJtiStored(decoded.jti);
+        const isStored = await tokenService.isJtiStored(decoded.jti);
         if (!isStored) {
             return res.status(401).json({ message: 'Invalid token (session terminated).' });
         }

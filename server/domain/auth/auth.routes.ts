@@ -1,13 +1,25 @@
 import { Router } from 'express';
 import {AuthService} from "./auth.service";
 import {AuthController} from "./auth.controller";
-import {authMiddleware} from "./auth.middleware";
 
-const router = Router();
-const authService = new AuthService();
-const authController = new AuthController(authService);
+export class AuthRouter {
 
-router.post('/register', (req, res) => authController.register(req, res));
-router.post('/login', (req, res) => authController.login(req, res));
+    private readonly router: Router;
+    private authController: AuthController;
 
-export default router;
+    constructor(private authService: AuthService) {
+        this.router = Router();
+        this.authController = new AuthController(this.authService);
+        this.initializeRoutes();
+    }
+
+    private initializeRoutes() {
+        this.router.post('/register', (req, res) => this.authController.register(req, res));
+        this.router.post('/login', (req, res) => this.authController.login(req, res));
+        this.router.post('/logout', (req, res) => this.authController.logout(req, res));
+    }
+
+    public getRouter(): Router {
+        return this.router;
+    }
+}

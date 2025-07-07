@@ -1,32 +1,48 @@
-class AuthRepository {
-    private static instance: AuthRepository;
+import {Db} from "@server/db";
+import {eq} from "drizzle-orm";
+import {User, users} from "@server/db/users";
+import * as bcrypt from "bcrypt";
 
-    private constructor() {
-        // Private constructor to prevent instantiation
+export abstract class IAuthRepository {
+
+    abstract findOrCreate(email: string, password: string): Promise<User>;
+
+    abstract findByEmail(email: string): Promise<User | null>;
+}
+export class AuthRepository extends IAuthRepository {
+
+
+    constructor(private db: Db) {
+        super();
     }
 
-    public static getInstance(): AuthRepository {
-        if (!AuthRepository.instance) {
-        AuthRepository.instance = new AuthRepository();
+    async findOrCreate(email: string, password: string): Promise<User> {
+        const userData = { email, password };
+        const existingUser = await this.db.query.users.findFirst({
+            where: eq(users.email, userData.email),
+        });
+
+        if (existingUser) {
+            throw new Error('User with this email already exists');
         }
-        return AuthRepository.instance;
+
+        const hashedPassword = await bcrypt.hash(userData.password, 100);
+
+        const [newUser] = await this.db.insert(users).values({
+            email: userData.email,
+            password: hashedPassword,
+        }).returning();
+
+        return newUser;
     }
 
-    public async login(email: string, password: string): Promise<string> {
-        // Simulate a login operation
-        return new Promise((resolve) => {
-        setTimeout(() => {
-            resolve(`Token for ${email}`);
-        }, 1000);
+    async findByEmail(email: string): Promise<User | null> {
+        const user = await this.db.query.users.findFirst({
+            where: eq(users.email, email),
         });
+
+        return user || null;
     }
 
-    public async register(email: string, password: string): Promise<string> {
-        // Simulate a registration operation
-        return new Promise((resolve) => {
-        setTimeout(() => {
-            resolve(`User ${email} registered successfully`);
-        }, 1000);
-        });
-    }
+
 }
