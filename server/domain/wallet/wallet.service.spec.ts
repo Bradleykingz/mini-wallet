@@ -1,5 +1,5 @@
 import {IWalletService, WalletService} from './wallet.service';
-import {IWalletRepository, WalletRepository} from './wallet.repository';
+import {IWalletRepository} from './wallet.repository';
 import {InMemoryClient} from '@server/platform/in-memory/in-memory.client';
 
 // Mock the dependencies
@@ -39,7 +39,14 @@ describe('WalletService', () => {
 
         it('should return balance from db and set cache if not available in cache', async () => {
             const userId = 1;
-            const wallet = {id: 1, userId, balance: '150.0000', createdAt: new Date(), updatedAt: new Date()};
+            const wallet = {
+                id: 1,
+                userId,
+                balance: '150.0000',
+                createdAt: new Date(),
+                updatedAt: new Date(),
+                currency: 'USD' as "USD"
+            };
             mockInMemoryClient.get.mockResolvedValue(null);
             mockWalletRepository.findOrCreateWalletByUserId.mockResolvedValue(wallet);
 
@@ -62,7 +69,14 @@ describe('WalletService', () => {
             const userId = 1;
             const amount = 50;
             const description = 'Top-up';
-            const wallet = {id: 1, userId, balance: '100.0000', createdAt: new Date(), updatedAt: new Date()};
+            const wallet = {
+                id: 1,
+                userId,
+                balance: '100.0000',
+                createdAt: new Date(),
+                updatedAt: new Date(),
+                currency: "USD" as "USD"
+            };
             const updatedWallet = {...wallet, balance: '150.0000'};
 
             mockWalletRepository.findOrCreateWalletByUserId.mockResolvedValue(wallet);
@@ -92,7 +106,14 @@ describe('WalletService', () => {
             const userId = 1;
             const amount = 30;
             const description = 'Purchase';
-            const wallet = {id: 1, userId, balance: '150.0000', createdAt: new Date(), updatedAt: new Date()};
+            const wallet = {
+                id: 1,
+                userId,
+                balance: '150.0000',
+                createdAt: new Date(),
+                updatedAt: new Date(),
+                currency: "USD" as "USD"
+            };
             const updatedWallet = {...wallet, balance: '120.0000'};
 
             mockWalletRepository.findOrCreateWalletByUserId.mockResolvedValue(wallet);
@@ -115,11 +136,19 @@ describe('WalletService', () => {
     describe('getTransactionHistory', () => {
         it('should return the transaction history for a user', async () => {
             const userId = 1;
-            const wallet = {id: 1, userId, balance: '120.0000', createdAt: new Date(), updatedAt: new Date()};
+            const wallet = {
+                id: 1,
+                userId,
+                balance: '120.0000',
+                createdAt: new Date(),
+                updatedAt: new Date(),
+                currency: "USD" as "USD"
+            };
             const history = [{
                 id: 1,
                 walletId: 1,
                 amount: '50.0000',
+                currency: 'USD' as "USD",
                 type: 'credit' as "credit" | "debit",
                 description: 'Top-up',
                 createdAt: new Date(),

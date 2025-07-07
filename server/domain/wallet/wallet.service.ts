@@ -1,43 +1,55 @@
-import {IWalletRepository, WalletRepository} from "@server/domain/wallet/wallet.repository";
+import {IWalletRepository} from "@server/domain/wallet/wallet.repository";
 import {InMemoryClient} from "@server/platform/in-memory/in-memory.client";
 
 const CACHE_TTL_SECONDS = 60 * 5; // 5 minutes
 
-function getBalanceCacheKey(userId: number): string {
-    return `wallet:balance:${userId}`;
+function getBalanceCacheKey(walletId: number): string {
+    return `wallet:${walletId}:balance`;
 }
 
 export abstract class IWalletService {
     abstract getBalance(userId: number): Promise<{ balance: string, source: 'cache' | 'db' }>;
+
     abstract credit(userId: number, amount: number, description?: string): Promise<any>;
+
     abstract debit(userId: number, amount: number, description?: string): Promise<any>;
+
     abstract getTransactionHistory(userId: number): Promise<any>;
 }
 
-export class WalletService extends IWalletService {
+// Define a type for our cached object for better clarity
+type CachedBalance = {
+    balance: string;
+    currency: string;
+};
 
-    constructor(private readonly walletRepository: IWalletRepository,
-                        private readonly inMemoryClient: InMemoryClient) {
+export class WalletService extends IWalletService {
+    constructor(
+        private readonly walletRepository: IWalletRepository,
+        private readonly inMemoryClient: InMemoryClient
+    ) {
         super()
     }
 
     /**
-     * Gets the wallet balance. Tries cache first, then falls back to the database.
+     * Gets the wallet balance and currency. Tries cache first.
      */
-    public async getBalance(userId: number): Promise<{ balance: string, source: 'cache' | 'db' }> {
+    public async getBalance(userId: number): Promise<{ balance: string; currency: string; source: 'cache' | 'db' }> {
         const cacheKey = getBalanceCacheKey(userId);
+        const cachedData = await this.inMemoryClient.get(cacheKey);
 
-        const cachedBalance = await this.inMemoryClient.get(cacheKey);
-        if (cachedBalance) {
-            return {balance: cachedBalance, source: 'cache'};
+        if (cachedData) {
+            const {balance, currency} = JSON.parse(cachedData) as CachedBalance;
+            return {balance, currency, source: 'cache'};
         }
 
         const wallet = await this.walletRepository.findOrCreateWalletByUserId(userId);
+        const dataToCache: CachedBalance = {balance: wallet.balance, currency: wallet.currency};
 
-        // Store the fresh balance in the cache
-        await this.inMemoryClient.set(cacheKey, wallet.balance, {EX: CACHE_TTL_SECONDS});
+        // Store the fresh balance and currency in the cache as a JSON string
+        await this.inMemoryClient.set(cacheKey, JSON.stringify(dataToCache), {EX: CACHE_TTL_SECONDS});
 
-        return {balance: wallet.balance, source: 'db'};
+        return {balance: wallet.balance, currency: wallet.currency, source: 'db'};
     }
 
     /**
@@ -54,11 +66,16 @@ export class WalletService extends IWalletService {
             walletId: wallet.id,
             amount: amount.toFixed(4),
             type: 'credit',
+            currency: wallet.currency,
             description,
         });
 
-        // Update cache with the new balance
-        await this.inMemoryClient.set(getBalanceCacheKey(userId), updatedWallet.balance, {EX: CACHE_TTL_SECONDS});
+        // Update cache with the new balance and currency
+        const dataToCache: CachedBalance = {
+            balance: updatedWallet.balance,
+            currency: updatedWallet.currency
+        };
+        await this.inMemoryClient.set(getBalanceCacheKey(wallet.id), JSON.stringify(dataToCache), {EX: CACHE_TTL_SECONDS});
 
         return updatedWallet;
     }
@@ -77,17 +94,19 @@ export class WalletService extends IWalletService {
             walletId: wallet.id,
             amount: amount.toFixed(4),
             type: 'debit',
+            currency: wallet.currency,
             description,
         });
 
-        // Update cache with the new balance
-        await this.inMemoryClient.set(getBalanceCacheKey(userId), updatedWallet.balance, {EX: CACHE_TTL_SECONDS});
+        // Update cache with the new balance and currency
+        const dataToCache: CachedBalance = {balance: updatedWallet.balance, currency: updatedWallet.currency};
+        await this.inMemoryClient.set(getBalanceCacheKey(updatedWallet.id), JSON.stringify(dataToCache), {EX: CACHE_TTL_SECONDS});
 
         return updatedWallet;
     }
 
     /**
-     * Gets transaction history for a user.
+     * Gets the last 50 transactions. The limit is handled by the repository.
      */
     public async getTransactionHistory(userId: number) {
         const wallet = await this.walletRepository.findOrCreateWalletByUserId(userId);

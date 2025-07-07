@@ -10,10 +10,13 @@ export const schema = pgTable('users', {
     emailIndex: uniqueIndex('email_idx').on(users.email),
 }));
 
+export const currencyEnum = pgEnum('currency', ['USD']);
+
 export const wallets = pgTable('wallets', {
     id: serial('id').primaryKey(),
     userId: integer('user_id').notNull().references(() => schema.id, {onDelete: 'cascade'}),
     balance: numeric('balance', {precision: 19, scale: 4}).default('0.00').notNull(),
+    currency: currencyEnum('currency').default('USD').notNull(),
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
@@ -25,6 +28,7 @@ export const transactions = pgTable('transactions', {
     walletId: integer('wallet_id').notNull().references(() => wallets.id, {onDelete: 'cascade'}),
     type: transactionTypeEnum('type').notNull(),
     amount: numeric('amount', {precision: 19, scale: 4}).notNull(),
+    currency: currencyEnum('currency').default('USD').notNull(),
     description: text('description'),
     createdAt: timestamp('created_at').defaultNow().notNull(),
 });

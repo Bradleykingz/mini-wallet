@@ -18,7 +18,7 @@ export abstract class IWalletRepository {
      * Creates a transaction (credit or debit) within a DB transaction to ensure atomicity.
      * This is the most critical part of the repository.
      */
-    abstract createTransaction(data: Pick<NewTransaction, 'walletId' | 'type' | 'amount' | 'description'>): Promise<typeof wallets.$inferSelect>;
+    abstract createTransaction(data: Pick<NewTransaction, 'walletId' | 'type' | 'amount' | 'currency' | 'description'>): Promise<typeof wallets.$inferSelect>;
 }
 
 export class WalletRepository extends IWalletRepository {
@@ -59,7 +59,7 @@ export class WalletRepository extends IWalletRepository {
      * Creates a transaction (credit or debit) within a DB transaction to ensure atomicity.
      * This is the most critical part of the repository.
      */
-    public async createTransaction(data: Pick<NewTransaction, 'walletId' | 'type' | 'amount' | 'description'>) {
+    public async createTransaction(data: Pick<NewTransaction, 'walletId' | 'type' | 'amount' | 'currency' | 'description'>) {
         return this.db.transaction(async (tx) => {
             // 1. Get the wallet and lock the row for the duration of the transaction
             // to prevent race conditions (e.g., two simultaneous debits).
@@ -87,6 +87,7 @@ export class WalletRepository extends IWalletRepository {
             // 3. Update the wallet's balance
             const [updatedWallet] = await tx.update(wallets)
                 .set({
+                    currency: data.currency,
                     balance: newBalance.toFixed(4), // Store with fixed precision
                     updatedAt: new Date()
                 })
