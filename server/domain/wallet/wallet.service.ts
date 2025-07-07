@@ -8,7 +8,7 @@ function getBalanceCacheKey(walletId: number): string {
 }
 
 export abstract class IWalletService {
-    abstract getBalance(userId: number): Promise<{ balance: string, currency: string, source: 'cache' | 'db' }>;
+    abstract getBalance(walletId: number): Promise<{ balance: string, currency: string, source: 'cache' | 'db' }>;
 
     abstract credit(userId: number, amount: number, description?: string): Promise<any>;
 
