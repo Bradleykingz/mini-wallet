@@ -1,6 +1,6 @@
-import { db } from '@server/db';
-import {transactions, NewTransaction, wallets, Transaction} from '@server/db/schema';
-import { eq } from 'drizzle-orm';
+import {db} from '@server/db';
+import {NewTransaction, Transaction, transactions, wallets} from '@server/db/schema';
+import {eq} from 'drizzle-orm';
 
 export abstract class ITransactionRepository {
     /**
@@ -13,7 +13,11 @@ export abstract class ITransactionRepository {
      * Creates a transaction record and atomically updates the wallet balance.
      * This is the core of our atomic balance update logic.
      */
-    abstract createAndUpdateBalance(data: Omit<NewTransaction, 'id' | 'createdAt'>): Promise<Transaction>;
+    abstract createAndUpdateBalance(data: Omit<NewTransaction, 'id' | 'createdAt'>): Promise<{
+        newTransaction: Transaction,
+        updatedWallet: typeof wallets.$inferSelect
+    }>;
+
 
     /**
      * Updates the status and provider ID of an existing transaction.
@@ -51,7 +55,7 @@ export class TransactionsRepository extends ITransactionRepository {
      */
     public async createAndUpdateBalance(
         data: Omit<NewTransaction, 'id' | 'createdAt'>
-    ): Promise<Transaction> {
+    ): Promise<{ newTransaction: Transaction, updatedWallet: typeof wallets.$inferSelect }> {
         return db.transaction(async (tx) => {
             const [wallet] = await tx.select().from(wallets).where(eq(wallets.id, data.walletId)).for('update');
             if (!wallet) throw new Error('Wallet not found.');
@@ -67,12 +71,13 @@ export class TransactionsRepository extends ITransactionRepository {
                 newBalance = currentBalance + transactionAmount;
             }
 
-            await tx.update(wallets)
-                .set({ balance: newBalance.toFixed(4), updatedAt: new Date() })
-                .where(eq(wallets.id, data.walletId));
+            const [updatedWallet] = await tx.update(wallets)
+                .set({balance: newBalance.toFixed(4), updatedAt: new Date()})
+                .where(eq(wallets.id, data.walletId))
+                .returning();
 
             const [newTransaction] = await tx.insert(transactions).values(data).returning();
-            return newTransaction;
+            return {newTransaction, updatedWallet};
         });
     }
 
@@ -85,7 +90,7 @@ export class TransactionsRepository extends ITransactionRepository {
         externalProviderId?: string
     ) {
         const [updatedTransaction] = await db.update(transactions)
-            .set({ status, externalProviderId })
+            .set({status, externalProviderId})
             .where(eq(transactions.referenceId, referenceId))
             .returning();
         return updatedTransaction;

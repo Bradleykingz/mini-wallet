@@ -11,6 +11,9 @@ import {TransactionService} from "@server/domain/transactions/transactions.servi
 import {TransactionsRepository} from "@server/domain/transactions/transactions.repository";
 import {WalletRepository} from "@server/domain/wallet/wallet.repository";
 import {MockPaymentProvider} from "@server/platform/payments/mock.provider";
+import {AlertService} from "@server/domain/alerts/alert.service";
+import {UserRepository} from "@server/domain/users/users.repository";
+import {AlertRouter} from "@server/domain/alerts/alert.routes";
 
 const port = parseInt(process.env.PORT || "2499", 10);
 const dev = process.env.NODE_ENV !== 'production';
@@ -40,6 +43,9 @@ app.prepare().then(async () => {
     const walletRouter = new WalletRouter(router)
     server.use("/api/wallet", walletRouter.getRouter());
 
+    const usersRepository = new UserRepository();
+
+    const alertService = new AlertService(db, usersRepository, redisClient);
     const transactionsRepository = new TransactionsRepository();
     const paymentProvider = new MockPaymentProvider()
 
@@ -48,10 +54,15 @@ app.prepare().then(async () => {
         walletRepository,
         paymentProvider,
         redisClient,
+        alertService
     )
 
     const transactionsRouter = new TransactionsRouter(router, transactionsService);
     server.use("/api/transactions", transactionsRouter.getRouter());
+
+
+    const alertsRouter = new AlertRouter(router, alertService);
+    server.use("/api/alerts", alertsRouter.getRouter());
 
     server.all('*', (req, res) => {
         return handle(req, res);

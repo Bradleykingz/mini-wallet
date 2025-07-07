@@ -13,7 +13,7 @@ declare global {
     }
 }
 
-export async function authMiddleware(req: Request, res: Response, next: NextFunction) {
+export function authMiddleware(req: Request, res: Response, next: NextFunction) {
     const tokenService: TokenHelper = res.app.get('tokenService');
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];

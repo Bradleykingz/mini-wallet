@@ -2,7 +2,8 @@ import {v4 as uuidv4} from 'uuid';
 import {IWalletRepository} from '../wallet/wallet.repository';
 import {ITransactionRepository} from './transactions.repository';
 import {InMemoryClient} from '@server/platform/in-memory/in-memory.client';
-import {IPaymentProvider, MockPaymentProvider} from "@server/platform/payments/mock.provider";
+import {IPaymentProvider} from "@server/platform/payments/mock.provider";
+import {IAlertService} from "@server/domain/alerts/alert.service";
 
 function getBalanceCacheKey(walletId: number): string {
     return `wallet:${walletId}:balance`;
@@ -32,7 +33,8 @@ export class TransactionService extends ITransactionService {
         private readonly transactionRepo: ITransactionRepository,
         private readonly walletRepo: IWalletRepository,
         private readonly paymentProvider: IPaymentProvider,
-        private readonly cache: InMemoryClient
+        private readonly cache: InMemoryClient,
+        private readonly alertService: IAlertService
     ) {
         super()
     }
@@ -88,7 +90,7 @@ export class TransactionService extends ITransactionService {
 
         // 1. Atomically debit funds and create a PENDING transaction record.
         // This reserves the funds and prevents double-spending.
-        const pendingTx = await this.transactionRepo.createAndUpdateBalance({
+        const {updatedWallet, newTransaction} = await this.transactionRepo.createAndUpdateBalance({
             referenceId,
             walletId: wallet.id,
             amount: amount.toFixed(4),
@@ -100,6 +102,9 @@ export class TransactionService extends ITransactionService {
 
         // 2. Invalidate cache immediately since balance has changed.
         await this.cache.del(getBalanceCacheKey(userId));
+
+        /// 3. trigger alert check
+        await this.alertService.checkForLowBalance(userId, parseFloat(updatedWallet.balance), updatedWallet.currency);
 
         try {
             // 3. Call the external provider
