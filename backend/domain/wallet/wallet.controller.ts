@@ -6,7 +6,8 @@ export class WalletController {
 
     async getBalance(req: Request, res: Response): Promise<void> {
         try {
-            const walletId = parseInt(req.params.walletId);
+            const userId = req.user.id;
+            const { id: walletId } = await this.walletService.findOrCreateWalletByUserId(userId);
             const balanceData = await this.walletService.getBalance(walletId);
             res.status(200).json(balanceData);
         } catch (error: any) {
@@ -16,14 +17,15 @@ export class WalletController {
     // perform debit or credit operations
     async transact(req: Request, res: Response): Promise<void> {
         try {
-            const walletIdParams = req.params.walletId;
-            const walletId = parseInt(walletIdParams)
             const { amount, description, type } = req.body;
 
             if (typeof amount !== 'number' || amount <= 0) {
                 res.status(400).json({ message: 'Invalid amount provided.' });
                 return;
             }
+
+            const userId = req.user.id;
+            const {id: walletId} = await this.walletService.findOrCreateWalletByUserId(userId);
 
             let updatedWallet;
             if (type === 'credit') {
@@ -43,7 +45,9 @@ export class WalletController {
 
     async getHistory(req: Request, res: Response): Promise<void> {
         try {
-            const walletId = parseInt(req.params.walletId);
+
+            const userId = req.user.id;
+            const { id: walletId } = await this.walletService.findOrCreateWalletByUserId(userId);
             const history = await this.walletService.getTransactionHistory(walletId);
             res.status(200).json(history);
         } catch (error: any) {

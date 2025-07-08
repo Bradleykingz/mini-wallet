@@ -69,7 +69,7 @@ export class WalletRepository extends IWalletRepository {
     }
 
     /**
-     * Creates a transaction (credit or debit) within a DB transaction to ensure atomicity.
+     * Creates a transaction (credit or debit) within a DB transaction to ensure atomicity, and updates the wallet's balance.
      * This is the most critical part of the repository.
      */
     public async createTransaction(data: Pick<NewTransaction, 'walletId' | 'type' | 'amount' | 'currency' | 'description'>) {

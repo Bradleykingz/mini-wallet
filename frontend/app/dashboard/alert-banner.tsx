@@ -1,9 +1,16 @@
-import {Alert} from "../../src/components/ui/alert";
+import {Alert, AlertDescription, AlertTitle} from "../../src/components/ui/alert";
 
-export default function AlertBanner (){
+export default function AlertBanner ({title = "Alert", description = "This is an alert message."}) {
     return (
         <>
-            <Alert />
+            <Alert>
+                <AlertTitle>
+                    {title}
+                </AlertTitle>
+                <AlertDescription>
+                    {description}
+                </AlertDescription>
+            </Alert>
         </>
     )
 }

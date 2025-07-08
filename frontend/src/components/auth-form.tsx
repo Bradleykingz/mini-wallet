@@ -10,7 +10,7 @@ import {useState} from "react"
 import {getApi} from "../lib/api";
 
 import {toast} from "sonner"
-import {useRouter} from "next/router";
+import {useRouter} from "next/navigation";
 
 export function AuthForm({className, ...props}: React.ComponentProps<"div">) {
 
@@ -22,11 +22,18 @@ export function AuthForm({className, ...props}: React.ComponentProps<"div">) {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
         try {
-            const response = await getApi().login(email, password)
-            toast.success("Login successful!")
-            await router.push("/dashboard")
+            const tokens = await getApi().login(email, password)
+            toast.success("Login successful!", {
+                position: "top-right",
+            })
+
+            localStorage.setItem("tokens", JSON.stringify(tokens))
+
+            router.push("/dashboard")
         } catch (e) {
-            toast.error("Login failed. Please check your email and password.")
+            toast.error("Login failed. Please check your email and password.", {
+                position: "top-right",
+            })
         }
     }
 
@@ -65,7 +72,7 @@ export function AuthForm({className, ...props}: React.ComponentProps<"div">) {
                                 />
                             </div>
                             <div className="flex flex-col gap-3">
-                                <Button type="submit" className="w-full">
+                                <Button type="submit" className="w-full cursor-pointer">
                                     Login
                                 </Button>
                             </div>

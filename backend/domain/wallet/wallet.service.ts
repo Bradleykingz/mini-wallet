@@ -1,5 +1,7 @@
 import {IWalletRepository} from "../../domain/wallet/wallet.repository";
 import {InMemoryClient} from "../../platform/in-memory/in-memory.client";
+import {Wallet} from "../../db/schema";
+import {Promise} from "@sinclair/typebox";
 
 const CACHE_TTL_SECONDS = 60 * 5; // 5 minutes
 
@@ -9,6 +11,8 @@ function getBalanceCacheKey(walletId: number): string {
 
 export abstract class IWalletService {
     abstract getBalance(walletId: number): Promise<{ balance: string, currency: string, source: 'cache' | 'db' }>;
+
+    abstract findOrCreateWalletByUserId(userId: number): Promise<Wallet>;
 
     abstract credit(userId: number, amount: number, description?: string): Promise<any>;
 
@@ -29,6 +33,10 @@ export class WalletService extends IWalletService {
         private readonly inMemoryClient: InMemoryClient
     ) {
         super()
+    }
+
+    findOrCreateWalletByUserId(userId: number): Promise<Wallet> {
+        return this.walletRepository.findOrCreateWalletByUserId(userId);
     }
 
     /**
@@ -62,6 +70,7 @@ export class WalletService extends IWalletService {
 
         const wallet = await this.walletRepository.findWalletById(walletId);
 
+        // create transaction and update the wallet balance
         const updatedWallet = await this.walletRepository.createTransaction({
             walletId: wallet.id,
             amount: amount.toFixed(4),

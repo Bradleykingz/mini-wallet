@@ -14,6 +14,11 @@ import { AlertService } from "./domain/alerts/alert.service";
 import { UserRepository } from "./domain/users/users.repository";
 import { AlertRouter } from "./domain/alerts/alert.routes";
 import { WalletService } from "./domain/wallet/wallet.service";
+import {AuthController} from "./domain/auth/auth.controller";
+import {WalletController} from "./domain/wallet/wallet.controller";
+import {TransactionController} from "./domain/transactions/transactions.controller";
+
+import cors from 'cors';
 
 const port = parseInt(process.env.PORT || "2499", 10);
 
@@ -22,19 +27,32 @@ const port = parseInt(process.env.PORT || "2499", 10);
 
     server.use(express.json());
     server.use(express.urlencoded({ extended: true }));
+    // Enable CORS for all origins
+
+    server.use(cors({
+        origin: "*", // or "*" if during dev
+        credentials: true,
+        methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+        allowedHeaders: ["Content-Type", "Authorization"]
+    }));
 
     const {db} = require('./db');
 
-    const authRepository = new AuthRepository(db);
     const redisClient = await RedisClient.create();
     const tokenService = new TokenService(redisClient);
+
+    server.set("tokenService", tokenService);
+
+    const authRepository = new AuthRepository(db);
     const authService = new AuthService(authRepository, tokenService);
-    const authRouter = new AuthRouter(authService);
+    const authController = new AuthController(authService);
+    const authRouter = new AuthRouter(authController);
     server.use('/api/auth', authRouter.getRouter());
 
     const walletRepository = new WalletRepository(db);
     const walletService = new WalletService(walletRepository, redisClient);
-    const walletRouter = new WalletRouter(walletService);
+    const walletController = new WalletController(walletService);
+    const walletRouter = new WalletRouter(walletController);
     server.use("/api/wallet", walletRouter.getRouter());
 
     const usersRepository = new UserRepository();
@@ -50,7 +68,8 @@ const port = parseInt(process.env.PORT || "2499", 10);
         alertService
     );
 
-    const transactionsRouter = new TransactionsRouter(transactionsService);
+    const transactionsController = new TransactionController(transactionsService);
+    const transactionsRouter = new TransactionsRouter(transactionsController);
     server.use("/api/transactions", transactionsRouter.getRouter());
 
     const alertsRouter = new AlertRouter(alertService);

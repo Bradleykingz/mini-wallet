@@ -1,4 +1,4 @@
-## Login
+### Login
 POST {{baseUrl}}/auth/login
 Content-Type: application/json
 
@@ -7,6 +7,7 @@ Content-Type: application/json
   "password": "{{password}}"
 }
 
+> {% client.global.set("token", response.body.accessToken); %}
 
 ### Register
 POST {{baseUrl}}/auth/register
@@ -15,4 +16,34 @@ Content-Type: application/json
 {
   "email": "{{username}}",
   "password": "{{password}}"
+}
+
+### Get balance
+GET {{baseUrl}}/wallet/balance
+Authorization: Bearer {{token}}
+
+### Get history
+GET {{baseUrl}}/wallet/history
+Authorization: Bearer {{token}}
+
+### Transact (credit)
+POST {{baseUrl}}/wallet/transact
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "amount": 100,
+  "type": "credit",
+  "description": "Credit transaction"
+}
+
+### Transact (debit)
+POST {{baseUrl}}/wallet/transact
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "amount": 20,
+  "type": "debit",
+  "description": "debit transaction"
 }

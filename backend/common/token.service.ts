@@ -31,7 +31,8 @@ export class TokenService {
 
     async isJtiStored(jti: string): Promise<boolean> {
         const result = await this.client.get(jti);
-        return result !== null;
+        const isResultStored = result !== null;
+        return isResultStored;
     }
 
     async clearJti(jti: string): Promise<void> {

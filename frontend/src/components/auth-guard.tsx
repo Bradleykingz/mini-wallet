@@ -17,7 +17,8 @@ export default function AuthGuard({children}: AuthGuardProps) {
         const hasToken = !!localStorage.getItem("tokens");
 
         if (!hasToken) {
-            router.replace(`/sign-in`);
+            console.log("No token found");
+            // router.replace(`/login`);
         } else {
             setIsAuthenticating(false);
         }

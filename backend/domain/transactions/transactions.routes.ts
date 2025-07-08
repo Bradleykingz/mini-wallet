@@ -4,12 +4,10 @@ import {TransactionController} from "../../domain/transactions/transactions.cont
 import {authMiddleware} from "../auth/auth.middleware";
 
 export class TransactionsRouter {
-    private readonly controller: TransactionController;
     private readonly router: Router = Router();
 
-    constructor(transactionService: TransactionService) {
+    constructor(private controller: TransactionController) {
         this.router.use(authMiddleware)
-        this.controller = new TransactionController(transactionService);
         this.initializeRoutes();
     }
 
