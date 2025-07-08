@@ -17,8 +17,8 @@ class APIClient {
                 if (
                     err.response?.status === 403 || err.response?.status === 401
                 ) {
-                    // localStorage.removeItem("tokens");
-                    // window.location.href = "/login";
+                    localStorage.removeItem("tokens");
+                    window.location.href = "/login";
                     toast.error("Please log in to continue");
                 } else {
                     console.error("unknown error", err);
