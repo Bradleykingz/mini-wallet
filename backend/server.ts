@@ -16,7 +16,7 @@ import { AlertRouter } from "./domain/alerts/alert.routes";
 import { WalletService } from "./domain/wallet/wallet.service";
 import {AuthController} from "./domain/auth/auth.controller";
 import {WalletController} from "./domain/wallet/wallet.controller";
-import {TransactionController} from "./domain/transactions/transactions.controller";
+import {TransactionsController} from "./domain/transactions/transactions.controller";
 
 import cors from 'cors';
 
@@ -68,7 +68,7 @@ const port = parseInt(process.env.PORT || "2499", 10);
         alertService
     );
 
-    const transactionsController = new TransactionController(transactionsService);
+    const transactionsController = new TransactionsController(transactionsService);
     const transactionsRouter = new TransactionsRouter(transactionsController);
     server.use("/api/transactions", transactionsRouter.getRouter());
 

@@ -1,6 +1,6 @@
-import {Request, Response} from 'express';
-import {WalletController} from './wallet.controller';
-import {IWalletService} from './wallet.service';
+import { Request, Response } from 'express';
+import { WalletController } from './wallet.controller';
+import { IWalletService } from './wallet.service';
 
 // Mock the WalletService
 const mockWalletService: jest.Mocked<IWalletService> = {
@@ -8,6 +8,7 @@ const mockWalletService: jest.Mocked<IWalletService> = {
     credit: jest.fn(),
     debit: jest.fn(),
     getTransactionHistory: jest.fn(),
+    findOrCreateWalletByUserId: jest.fn()
 };
 
 // Helper to create mock Express response object
@@ -31,41 +32,81 @@ describe('WalletController', () => {
 
     describe('GET /balance', () => {
         it('should return the wallet balance with a 200 status code', async () => {
-            req = {user: {sub: 1}}; // Mock user from JWT
-            const balanceData = {balance: '100.0000', currency: "USD", source: 'db' as "cache" | "db"};
+            req = { user: { id: 1 } };
+            const wallet = {
+                id: 123,
+                createdAt: new Date(),
+                userId: 1,
+                balance: "120",
+                currency: "USD" as const,
+                updatedAt: new Date(),
+            }
+            const balanceData = { balance: '100.0000', currency: "USD", source: 'db' as "cache" | "db" };
+            mockWalletService.findOrCreateWalletByUserId.mockResolvedValue(wallet);
             mockWalletService.getBalance.mockResolvedValue(balanceData);
 
             await walletController.getBalance(req as Request, res);
 
-            expect(mockWalletService.getBalance).toHaveBeenCalledWith(1);
+            expect(mockWalletService.findOrCreateWalletByUserId).toHaveBeenCalledWith(1);
+            expect(mockWalletService.getBalance).toHaveBeenCalledWith(123);
             expect(res.status).toHaveBeenCalledWith(200);
             expect(res.json).toHaveBeenCalledWith(balanceData);
         });
 
-        it('should return 500 if the service throws an error', async () => {
-            req = {user: {sub: 1}};
+        it('should return 500 if the service throws an error (findOrCreateWalletByUserId)', async () => {
+            req = { user: { id: 1 } };
             const errorMessage = 'Database error';
+            mockWalletService.findOrCreateWalletByUserId.mockRejectedValue(new Error(errorMessage));
+
+            await walletController.getBalance(req as Request, res);
+
+            expect(res.status).toHaveBeenCalledWith(500);
+            expect(res.json).toHaveBeenCalledWith({ message: errorMessage });
+        });
+
+        it('should return 500 if the service throws an error (getBalance)', async () => {
+            req = { user: { id: 1 } };
+            const errorMessage = 'Balance error';
+            const wallet = {
+                id: 123,
+                createdAt: new Date(),
+                userId: 1,
+                balance: "120",
+                currency: "USD" as const,
+                updatedAt: new Date(),
+            }
+            mockWalletService.findOrCreateWalletByUserId.mockResolvedValue(wallet);
             mockWalletService.getBalance.mockRejectedValue(new Error(errorMessage));
 
             await walletController.getBalance(req as Request, res);
 
             expect(res.status).toHaveBeenCalledWith(500);
-            expect(res.json).toHaveBeenCalledWith({message: errorMessage});
+            expect(res.json).toHaveBeenCalledWith({ message: errorMessage });
         });
     });
 
     describe('POST /transact', () => {
         it('should credit the wallet and return success', async () => {
             req = {
-                params: { walletId: '1' },
+                user: { id: 2 },
                 body: { amount: 100, description: 'Deposit', type: 'credit' }
             };
+            const wallet = {
+                id: 22,
+                createdAt: new Date(),
+                userId: 1,
+                balance: "120",
+                currency: "USD" as const,
+                updatedAt: new Date(),
+            }
+            mockWalletService.findOrCreateWalletByUserId.mockResolvedValue(wallet);
             const updatedWallet = { balance: '200.00', currency: 'USD' };
             mockWalletService.credit.mockResolvedValue(updatedWallet);
 
             await walletController.transact(req as Request, res);
 
-            expect(mockWalletService.credit).toHaveBeenCalledWith(1, 100, 'Deposit');
+            expect(mockWalletService.findOrCreateWalletByUserId).toHaveBeenCalledWith(2);
+            expect(mockWalletService.credit).toHaveBeenCalledWith(22, 100, 'Deposit');
             expect(res.status).toHaveBeenCalledWith(200);
             expect(res.json).toHaveBeenCalledWith({
                 message: 'Credit successful',
@@ -75,15 +116,25 @@ describe('WalletController', () => {
 
         it('should debit the wallet and return success', async () => {
             req = {
-                params: { walletId: '2' },
+                user: { id: 4 },
                 body: { amount: 50, description: 'Withdraw', type: 'debit' }
             };
+            const wallet = {
+                id: 44,
+                createdAt: new Date(),
+                userId: 1,
+                balance: "120",
+                currency: "USD" as const,
+                updatedAt: new Date(),
+            }
+            mockWalletService.findOrCreateWalletByUserId.mockResolvedValue(wallet);
             const updatedWallet = { balance: '50.00', currency: 'USD' };
             mockWalletService.debit.mockResolvedValue(updatedWallet);
 
             await walletController.transact(req as Request, res);
 
-            expect(mockWalletService.debit).toHaveBeenCalledWith(2, 50, 'Withdraw');
+            expect(mockWalletService.findOrCreateWalletByUserId).toHaveBeenCalledWith(4);
+            expect(mockWalletService.debit).toHaveBeenCalledWith(44, 50, 'Withdraw');
             expect(res.status).toHaveBeenCalledWith(200);
             expect(res.json).toHaveBeenCalledWith({
                 message: 'Debit successful',
@@ -91,10 +142,34 @@ describe('WalletController', () => {
             });
         });
 
-        it('should return 400 if amount is invalid', async () => {
+        it('should return 400 if amount is invalid (negative)', async () => {
             req = {
-                params: { walletId: '1' },
+                user: { id: 1 },
                 body: { amount: -10, description: 'Deposit', type: 'credit' }
+            };
+
+            await walletController.transact(req as Request, res);
+
+            expect(res.status).toHaveBeenCalledWith(400);
+            expect(res.json).toHaveBeenCalledWith({ message: 'Invalid amount provided.' });
+        });
+
+        it('should return 400 if amount is invalid (zero)', async () => {
+            req = {
+                user: { id: 1 },
+                body: { amount: 0, description: 'Deposit', type: 'credit' }
+            };
+
+            await walletController.transact(req as Request, res);
+
+            expect(res.status).toHaveBeenCalledWith(400);
+            expect(res.json).toHaveBeenCalledWith({ message: 'Invalid amount provided.' });
+        });
+
+        it('should return 400 if amount is invalid (not a number)', async () => {
+            req = {
+                user: { id: 1 },
+                body: { amount: undefined, description: 'Deposit', type: 'credit' }
             };
 
             await walletController.transact(req as Request, res);
@@ -105,9 +180,18 @@ describe('WalletController', () => {
 
         it('should return 400 if transaction type is invalid', async () => {
             req = {
-                params: { walletId: '1' },
+                user: { id: 1 },
                 body: { amount: 10, description: 'Deposit', type: 'invalid' }
             };
+            const wallet = {
+                id: 123,
+                createdAt: new Date(),
+                userId: 1,
+                balance: "120",
+                currency: "USD" as const,
+                updatedAt: new Date(),
+            }
+            mockWalletService.findOrCreateWalletByUserId.mockResolvedValue(wallet);
 
             await walletController.transact(req as Request, res);
 
@@ -115,49 +199,119 @@ describe('WalletController', () => {
             expect(res.json).toHaveBeenCalledWith({ message: 'Invalid transaction type.' });
         });
 
-        it('should handle service errors gracefully', async () => {
+        it('should handle service errors gracefully (credit)', async () => {
             req = {
-                params: { walletId: '1' },
+                user: { id: 1 },
                 body: { amount: 10, description: 'Deposit', type: 'credit' }
             };
+            const wallet = {
+                id: 123,
+                createdAt: new Date(),
+                userId: 1,
+                balance: "120",
+                currency: "USD" as const,
+                updatedAt: new Date(),
+            }
+            mockWalletService.findOrCreateWalletByUserId.mockResolvedValue(wallet);
             mockWalletService.credit.mockRejectedValue(new Error('Service error'));
 
             await walletController.transact(req as Request, res);
 
-            // No response expected due to empty catch block, but you may want to improve error handling in the controller
+            // No response expected due to empty catch block (could spy on error thrown)
             expect(mockWalletService.credit).toHaveBeenCalled();
+        });
+
+        it('should handle service errors gracefully (debit)', async () => {
+            req = {
+                user: { id: 1 },
+                body: { amount: 10, description: 'Withdraw', type: 'debit' }
+            };
+            const wallet = {
+                id: 123,
+                createdAt: new Date(),
+                userId: 1,
+                balance: "120",
+                currency: "USD" as const,
+                updatedAt: new Date(),
+            }
+            mockWalletService.findOrCreateWalletByUserId.mockResolvedValue(wallet);
+            mockWalletService.debit.mockRejectedValue(new Error('Debit failed'));
+
+            await walletController.transact(req as Request, res);
+
+            expect(mockWalletService.debit).toHaveBeenCalled();
+        });
+
+        it('should not call service methods if user object missing', async () => {
+            req = { body: { amount: 10, description: 'Deposit', type: 'credit' } };
+
+            // @ts-ignore
+            await walletController.transact(req as Request, res);
+
+            // Will throw error, but not call service
+            expect(mockWalletService.findOrCreateWalletByUserId).not.toHaveBeenCalled();
         });
     });
 
     describe('GET /history', () => {
         it('should return the transaction history', async () => {
-            req = {user: {sub: 1}};
+            req = { user: { id: 3 } };
+            const wallet = {
+                id: 33,
+                createdAt: new Date(),
+                userId: 1,
+                balance: "120",
+                currency: "USD" as const,
+                updatedAt: new Date(),
+            }
             const history = [{
                 id: 1,
-                walletId: 1,
+                walletId: 33,
                 amount: '50.0000',
                 type: 'credit',
                 description: 'Deposit',
                 createdAt: new Date()
             }];
+            mockWalletService.findOrCreateWalletByUserId.mockResolvedValue(wallet);
             mockWalletService.getTransactionHistory.mockResolvedValue(history);
 
             await walletController.getHistory(req as Request, res);
 
-            expect(mockWalletService.getTransactionHistory).toHaveBeenCalledWith(1);
+            expect(mockWalletService.findOrCreateWalletByUserId).toHaveBeenCalledWith(3);
+            expect(mockWalletService.getTransactionHistory).toHaveBeenCalledWith(33);
             expect(res.status).toHaveBeenCalledWith(200);
             expect(res.json).toHaveBeenCalledWith(history);
         });
 
-        it('should return 500 if the service throws an error', async () => {
-            req = {user: {sub: 1}};
+        it('should return 500 if the service throws an error (findOrCreateWalletByUserId)', async () => {
+            req = { user: { id: 1 } };
+            const errorMessage = 'Failed to fetch wallet';
+            mockWalletService.findOrCreateWalletByUserId.mockRejectedValue(new Error(errorMessage));
+
+            await walletController.getHistory(req as Request, res);
+
+            expect(res.status).toHaveBeenCalledWith(500);
+            expect(res.json).toHaveBeenCalledWith({ message: errorMessage });
+        });
+
+        it('should return 500 if the service throws an error (getTransactionHistory)', async () => {
+            req = { user: { id: 2 } };
+            const wallet = {
+                id: 123,
+                createdAt: new Date(),
+                userId: 1,
+                balance: "120",
+                currency: "USD" as const,
+                updatedAt: new Date(),
+            }
             const errorMessage = 'Failed to fetch history';
+            mockWalletService.findOrCreateWalletByUserId.mockResolvedValue(wallet);
             mockWalletService.getTransactionHistory.mockRejectedValue(new Error(errorMessage));
 
             await walletController.getHistory(req as Request, res);
 
             expect(res.status).toHaveBeenCalledWith(500);
-            expect(res.json).toHaveBeenCalledWith({message: errorMessage});
+            expect(res.json).toHaveBeenCalledWith({ message: errorMessage });
         });
     });
 });

@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
-import {TransactionService} from "../../domain/transactions/transactions.service";
+import {TransactionService} from "./transactions.service";
 
-export class TransactionController {
+export class TransactionsController {
     constructor(private transactionService: TransactionService) {}
 
     async getReceipt(req: Request, res: Response): Promise<void> {
