@@ -1,4 +1,4 @@
-import { AlertRepository } from './alert.repository';
+import {IAlertRepository} from './alert.repository';
 import { InMemoryClient } from '../../platform/in-memory/in-memory.client';
 import {UserRepository} from "../../domain/users/users.repository";
 import {formatCurrency} from "../../common/currency-formatter";
@@ -29,7 +29,7 @@ export abstract class IAlertService {
 
 export class AlertService extends IAlertService {
     constructor(
-        private readonly alertRepo: AlertRepository,
+        private readonly alertRepo: IAlertRepository,
         private readonly userRepo: UserRepository,
         private readonly cache: InMemoryClient,
     ) {

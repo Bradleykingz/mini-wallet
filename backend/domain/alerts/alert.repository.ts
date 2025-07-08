@@ -2,7 +2,24 @@ import { db } from '../../db';
 import {Alert, alerts, NewAlert} from '../../db/schema';
 import { and, eq, inArray } from 'drizzle-orm';
 
-export class AlertRepository {
+export abstract class IAlertRepository {
+    /**
+     * Creates a new alert for a user.
+     */
+    abstract create(data: NewAlert): Promise<Alert>;
+
+    /**
+     * Finds active (unread) alerts for a given user.
+     */
+    abstract findActiveByUser(userId: number): Promise<Alert[]>;
+
+    /**
+     * Marks a list of alerts as read for a specific user to ensure authorization.
+     */
+    abstract markAsRead(userId: number, alertIds: number[]): Promise<void>;
+}
+
+export class AlertRepository implements IAlertRepository {
     public async create(data: NewAlert): Promise<Alert> {
         const [newAlert] = await db.insert(alerts).values(data).returning();
         return newAlert;

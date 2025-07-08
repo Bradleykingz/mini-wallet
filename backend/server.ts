@@ -19,6 +19,8 @@ import {WalletController} from "./domain/wallet/wallet.controller";
 import {TransactionsController} from "./domain/transactions/transactions.controller";
 
 import cors from 'cors';
+import {AlertController} from "./domain/alerts/alert.controller";
+import {AlertRepository} from "./domain/alerts/alert.repository";
 
 const port = parseInt(process.env.PORT || "2499", 10);
 
@@ -56,7 +58,8 @@ const port = parseInt(process.env.PORT || "2499", 10);
     server.use("/api/wallet", walletRouter.getRouter());
 
     const usersRepository = new UserRepository();
-    const alertService = new AlertService(db, usersRepository, redisClient);
+    const alertRepository = new AlertRepository();
+    const alertService = new AlertService(alertRepository, usersRepository, redisClient);
     const transactionsRepository = new TransactionsRepository();
     const paymentProvider = new MockPaymentProvider();
 
@@ -72,7 +75,8 @@ const port = parseInt(process.env.PORT || "2499", 10);
     const transactionsRouter = new TransactionsRouter(transactionsController);
     server.use("/api/transactions", transactionsRouter.getRouter());
 
-    const alertsRouter = new AlertRouter(alertService);
+    const alertController = new AlertController(alertService);
+    const alertsRouter = new AlertRouter(alertController);
     server.use("/api/alerts", alertsRouter.getRouter());
 
     server.listen(port, () => {

@@ -16,7 +16,7 @@ export class TransactionsController {
 
     async transact(req: Request, res: Response): Promise<void> {
         try {
-            const userId = req.user.sub;
+            const userId = req.user.id;
             const { amount, type } = req.body; // type: 'cashIn' | 'cashOut'
 
             if (typeof amount !== 'number' || amount <= 0) {

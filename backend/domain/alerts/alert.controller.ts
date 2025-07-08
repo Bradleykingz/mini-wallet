@@ -1,22 +1,23 @@
 import { Request, Response } from 'express';
-import { AlertService } from './alert.service';
+import {IAlertService} from './alert.service';
 
 export class AlertController {
-    constructor(private alertService: AlertService) {}
+    constructor(private alertService: IAlertService) {}
 
     async getActiveAlerts(req: Request, res: Response): Promise<void> {
         try {
-            const userId = req.user.sub;
+            const userId = req.user.id;
             const result = await this.alertService.getActiveAlerts(userId);
             res.status(200).json(result);
         } catch (error: any) {
+            console.error(error);
             res.status(500).json({ message: 'Failed to retrieve alerts.' });
         }
     }
 
     async markAsRead(req: Request, res: Response): Promise<void> {
         try {
-            const userId = req.user.sub;
+            const userId = req.user.id;
             const { alertIds } = req.body;
 
             if (!Array.isArray(alertIds) || alertIds.length === 0) {
