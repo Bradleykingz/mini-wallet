@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import {IWalletService} from "../../domain/wallet/wallet.service";
+import {IWalletService} from "./wallet.service";
 
 export class WalletController {
     constructor(private walletService: IWalletService) {}
@@ -39,7 +39,8 @@ export class WalletController {
 
             res.status(200).json({ message: `${type.charAt(0).toUpperCase() + type.slice(1)} successful`, wallet: updatedWallet });
         } catch (e) {
-
+            console.error(e);
+            res.status(500).json({ message: e });
         }
     }
 
