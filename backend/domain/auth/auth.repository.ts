@@ -26,7 +26,7 @@ export class AuthRepository extends IAuthRepository {
             throw new Error('User with this email already exists');
         }
 
-        const hashedPassword = await bcrypt.hash(userData.password, 100);
+        const hashedPassword = await bcrypt.hash(password, 10);
 
         const [newUser] = await this.db.insert(users).values({
             email: userData.email,
