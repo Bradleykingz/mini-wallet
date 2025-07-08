@@ -21,7 +21,7 @@ export default function TransactionForm() {
             const amount = parseFloat(form.amount.value);
             const description = form.description.value;
 
-            const data = await getApi().transact(amount, type, description || undefined);
+            await getApi().transact(amount, type, description || undefined);
 
             toast.info("Transaction successful!", {
                 position: "top-right",

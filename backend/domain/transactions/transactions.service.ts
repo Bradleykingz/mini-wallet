@@ -3,7 +3,7 @@ import {IWalletRepository} from '../wallet/wallet.repository';
 import {ITransactionRepository} from './transactions.repository';
 import {InMemoryClient} from '../../platform/in-memory/in-memory.client';
 import {IPaymentProvider} from "../../platform/payments/mock.provider";
-import {IAlertService} from "../../domain/alerts/alert.service";
+import {IAlertService} from "../alerts/alert.service";
 
 function getBalanceCacheKey(walletId: number): string {
     return `wallet:${walletId}:balance`;
@@ -90,7 +90,7 @@ export class TransactionService extends ITransactionService {
 
         // 1. Atomically debit funds and create a PENDING transaction record.
         // This reserves the funds and prevents double-spending.
-        const {updatedWallet, newTransaction} = await this.transactionRepo.createAndUpdateBalance({
+        const {updatedWallet} = await this.transactionRepo.createAndUpdateBalance({
             referenceId,
             walletId: wallet.id,
             amount: amount.toFixed(4),
@@ -111,13 +111,11 @@ export class TransactionService extends ITransactionService {
             const providerResponse = await this.paymentProvider.initiateWithdrawal(amount, wallet.currency);
 
             // 4. On provider success, mark our transaction as COMPLETED
-            const completedTx = await this.transactionRepo.updateStatus(
+            return this.transactionRepo.updateStatus(
                 referenceId,
                 'completed',
                 providerResponse.providerTransactionId
-            );
-
-            return completedTx; // The digital receipt
+            ); // The digital receipt
         } catch (error) {
             const err = error instanceof Error ? error : new Error('Unknown error occurred');
             // 5. On provider failure, we must REFUND the agent.
