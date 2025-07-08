@@ -1,5 +1,3 @@
-// src/domain/transactions/transaction.controller.test.ts
-
 import {Request, Response} from 'express';
 import {TransactionService} from './transactions.service';
 import {TransactionsController} from "./transactions.controller";
@@ -71,9 +69,9 @@ describe('TransactionController', () => {
         });
     });
 
-    describe('cashIn', () => {
+    describe('transact (cash_in)', () => {
         it('should return 201 with receipt on successful cash-in', async () => {
-            mockRequest.body = {amount: 100};
+            mockRequest.body = {amount: 100, type: "cash_in"};
             const transactionResult = {
                 newTransaction: {
                     id: 1,
@@ -81,7 +79,7 @@ describe('TransactionController', () => {
                     createdAt: new Date(),
                     currency: "USD" as const,
                     walletId: 1,
-                    type: "credit" as const,
+                    type: "cash_in" as const,
                     status: "pending" as const,
                     amount: "100",
                     description: "Cash-in of 100 USD",
@@ -98,58 +96,56 @@ describe('TransactionController', () => {
             };
             mockTransactionService.cashIn.mockResolvedValue(transactionResult);
 
-            await controller.cashIn(mockRequest as Request, mockResponse as Response);
+            await controller.transact(mockRequest as Request, mockResponse as Response);
 
-            expect(mockTransactionService.cashIn
-            ).toHaveBeenCalledWith(userId, 100);
+            expect(mockTransactionService.cashIn).toHaveBeenCalledWith(userId, 100);
             expect(responseStatus).toHaveBeenCalledWith(201);
             expect(responseJson).toHaveBeenCalledWith({message: 'Cash-in successful.', receipt: transactionResult});
-        })
-        ;
+        });
 
         it('should return 400 for an invalid amount (zero)', async () => {
-            mockRequest.body = {amount: 0};
-            await controller.cashIn(mockRequest as Request, mockResponse as Response);
+            mockRequest.body = {amount: 0, type: "cash_in"};
+            await controller.transact(mockRequest as Request, mockResponse as Response);
             expect(responseStatus).toHaveBeenCalledWith(400);
             expect(responseJson).toHaveBeenCalledWith({message: 'Invalid amount provided.'});
         });
 
         it('should return 400 for an invalid amount (string)', async () => {
-            mockRequest.body = {amount: 'invalid'};
-            await controller.cashIn(mockRequest as Request, mockResponse as Response);
+            mockRequest.body = {amount: 'invalid', type: "cash_in"};
+            await controller.transact(mockRequest as Request, mockResponse as Response);
             expect(responseStatus).toHaveBeenCalledWith(400);
             expect(responseJson).toHaveBeenCalledWith({message: 'Invalid amount provided.'});
         });
 
         it('should return 400 if service throws an error', async () => {
-            mockRequest.body = {amount: 100};
+            mockRequest.body = {amount: 100, type: "cash_in"};
             mockTransactionService.cashIn.mockRejectedValue(new Error('Provider failed'));
 
-            await controller.cashIn(mockRequest as Request, mockResponse as Response);
+            await controller.transact(mockRequest as Request, mockResponse as Response);
 
             expect(responseStatus).toHaveBeenCalledWith(400);
             expect(responseJson).toHaveBeenCalledWith({message: 'Provider failed'});
         });
     });
 
-    describe('cashOut', () => {
+    describe('transact (cash_out)', () => {
         it('should return 200 on successful cash-out initiation', async () => {
-            mockRequest.body = {amount: 50};
+            mockRequest.body = {amount: 50, type: "cash_out"};
             const transactionResult = {
                 id: 1,
                 referenceId: "1224",
                 createdAt: new Date(),
                 currency: "USD" as const,
                 walletId: 1,
-                type: "credit" as const,
+                type: "cash_out" as const,
                 status: "completed" as const,
                 amount: "100",
-                description: "Cash-in of 100 USD",
+                description: "Cash-out of 100 USD",
                 externalProviderId: "12344",
             };
             mockTransactionService.cashOut.mockResolvedValue(transactionResult);
 
-            await controller.cashOut(mockRequest as Request, mockResponse as Response);
+            await controller.transact(mockRequest as Request, mockResponse as Response);
 
             expect(mockTransactionService.cashOut).toHaveBeenCalledWith(userId, 50);
             expect(responseStatus).toHaveBeenCalledWith(200);
@@ -160,20 +156,29 @@ describe('TransactionController', () => {
         });
 
         it('should return 400 for an invalid amount', async () => {
-            mockRequest.body = {amount: -50};
-            await controller.cashOut(mockRequest as Request, mockResponse as Response);
+            mockRequest.body = {amount: -50, type: "cash_out"};
+            await controller.transact(mockRequest as Request, mockResponse as Response);
             expect(responseStatus).toHaveBeenCalledWith(400);
             expect(responseJson).toHaveBeenCalledWith({message: 'Invalid amount provided.'});
         });
 
         it('should return 400 if service throws an error (e.g., insufficient funds)', async () => {
-            mockRequest.body = {amount: 50};
+            mockRequest.body = {amount: 50, type: "cash_out"};
             mockTransactionService.cashOut.mockRejectedValue(new Error('Insufficient funds.'));
 
-            await controller.cashOut(mockRequest as Request, mockResponse as Response);
+            await controller.transact(mockRequest as Request, mockResponse as Response);
 
             expect(responseStatus).toHaveBeenCalledWith(400);
             expect(responseJson).toHaveBeenCalledWith({message: 'Insufficient funds.'});
+        });
+    });
+
+    describe('transact (invalid type)', () => {
+        it('should return 400 for invalid transaction type', async () => {
+            mockRequest.body = {amount: 100, type: "invalid_type"};
+            await controller.transact(mockRequest as Request, mockResponse as Response);
+            expect(responseStatus).toHaveBeenCalledWith(400);
+            expect(responseJson).toHaveBeenCalledWith({message: 'Invalid transaction type.'});
         });
     });
 });

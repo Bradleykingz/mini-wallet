@@ -14,34 +14,32 @@ export class TransactionsController {
         }
     }
 
-    async cashIn(req: Request, res: Response): Promise<void> {
+    async transact(req: Request, res: Response): Promise<void> {
         try {
             const userId = req.user.sub;
-            const { amount } = req.body;
+            const { amount, type } = req.body; // type: 'cashIn' | 'cashOut'
+
             if (typeof amount !== 'number' || amount <= 0) {
                 res.status(400).json({ message: 'Invalid amount provided.' });
                 return;
             }
-            const transaction = await this.transactionService.cashIn(userId, amount);
-            res.status(201).json({ message: 'Cash-in successful.', receipt: transaction });
+
+            if (type !== 'cash_out' && type !== 'cash_in') {
+                res.status(400).json({ message: 'Invalid transaction type.' });
+                return;
+            }
+
+            let transaction;
+            if (type === 'cash_in') {
+                transaction = await this.transactionService.cashIn(userId, amount);
+                res.status(201).json({ message: 'Cash-in successful.', receipt: transaction });
+            } else {
+                transaction = await this.transactionService.cashOut(userId, amount);
+                res.status(200).json({ message: 'Cash-out initiated successfully.', receipt: transaction });
+            }
         } catch (error: any) {
             res.status(400).json({ message: error.message });
         }
     }
 
-    async cashOut(req: Request, res: Response): Promise<void> {
-        try {
-            const userId = req.user.sub;
-            const { amount } = req.body;
-            if (typeof amount !== 'number' || amount <= 0) {
-                res.status(400).json({ message: 'Invalid amount provided.' });
-                return;
-            }
-            const transaction = await this.transactionService.cashOut(userId, amount);
-            res.status(200).json({ message: 'Cash-out initiated successfully.', receipt: transaction });
-        } catch (error: any) {
-            // Handle specific errors like 'Insufficient funds' vs provider failure
-            res.status(400).json({ message: error.message });
-        }
-    }
 }
