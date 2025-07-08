@@ -1,60 +1,39 @@
+"use client";
+
 import TransactionsTable from "./transaction-table";
 import AuthGuard from "../../src/components/auth-guard";
+import useSWR from "swr";
+import {fetcher} from "../../src/lib/api";
+import {Button} from "../../src/components/ui/button";
 
-const invoices = [
-    {
-        invoice: "INV001",
-        paymentStatus: "Paid",
-        totalAmount: "$250.00",
-        paymentMethod: "Credit Card",
-    },
-    {
-        invoice: "INV002",
-        paymentStatus: "Pending",
-        totalAmount: "$150.00",
-        paymentMethod: "PayPal",
-    },
-    {
-        invoice: "INV003",
-        paymentStatus: "Unpaid",
-        totalAmount: "$350.00",
-        paymentMethod: "Bank Transfer",
-    },
-    {
-        invoice: "INV004",
-        paymentStatus: "Paid",
-        totalAmount: "$450.00",
-        paymentMethod: "Credit Card",
-    },
-    {
-        invoice: "INV005",
-        paymentStatus: "Paid",
-        totalAmount: "$550.00",
-        paymentMethod: "PayPal",
-    },
-    {
-        invoice: "INV006",
-        paymentStatus: "Pending",
-        totalAmount: "$200.00",
-        paymentMethod: "Bank Transfer",
-    },
-    {
-        invoice: "INV007",
-        paymentStatus: "Unpaid",
-        totalAmount: "$300.00",
-        paymentMethod: "Credit Card",
-    },
-]
 export default function History() {
 
+    const {data: transactionsData, isLoading, error} = useSWR("/wallet/history", fetcher);
+
+    if (isLoading) {
+        return <div>Loading...</div>;
+    }
+
+    if (error) {
+        return (
+            <div className="p-12">
+                <p className="text-red-500">Error loading transactions: {error.message}</p>
+            </div>
+        );
+    }
 
     return (
         <>
             <AuthGuard>
                 <div className={"p-12"}>
-                    <p>History</p>
+                    <div className={"mb-4"}>
+                        <Button>
+                            <a href={"/dashboard"}>Back to Dashboard</a>
+                        </Button>
+                    </div>
+                    <h2 className={"text-2xl font-bold"}>History</h2>
                     <div>
-                        <TransactionsTable transactions={invoices}/>
+                        <TransactionsTable transactions={transactionsData}/>
                     </div>
                 </div>
             </AuthGuard>
