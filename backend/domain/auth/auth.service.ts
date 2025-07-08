@@ -1,12 +1,12 @@
 import * as bcrypt from 'bcrypt';
 import {v4 as uuidv4} from "uuid";
-import {NewUser} from '../../db/schema';
+import {NewAgent} from '../../db/schema';
 import {IAuthRepository} from "./auth.repository";
 import {TokenService} from "../../common/token.service";
 
-// Exclude password from user object returned to client
-function toUserResponse(user: NewUser) {
-    const { password, ...response } = user;
+// Exclude password from agent object returned to client
+function toAgentResponse(agent: NewAgent) {
+    const { password, ...response } = agent;
     return response;
 }
 
@@ -20,19 +20,19 @@ export class AuthService {
         }
     }
 
-    async register(userData: Pick<NewUser, 'email' | 'password'>) {
-        const data = await this.authRepository.findOrCreate(userData.email, userData.password);
-        return toUserResponse(data);
+    async register(agentData: Pick<NewAgent, 'email' | 'password'>) {
+        const data = await this.authRepository.findOrCreate(agentData.email, agentData.password);
+        return toAgentResponse(data);
     }
 
-    async login(credentials: Pick<NewUser, 'email' | 'password'>) {
-        const user = await this.authRepository.findByEmail(credentials.email);
+    async login(credentials: Pick<NewAgent, 'email' | 'password'>) {
+        const agent = await this.authRepository.findByEmail(credentials.email);
 
-        if (!user) {
+        if (!agent) {
             throw new Error('Invalid email or password');
         }
 
-        const isPasswordValid = await bcrypt.compare(credentials.password, user.password);
+        const isPasswordValid = await bcrypt.compare(credentials.password, agent.password);
         if (!isPasswordValid) {
             throw new Error('Invalid email or password');
         }
@@ -40,11 +40,11 @@ export class AuthService {
         const jti = uuidv4();
 
         const token = this.tokenService.generateToken(jti, {
-            id: user.id,
-            email: user.email,
+            id: agent.id,
+            email: agent.email,
         });
 
-        await this.tokenService.storeJti(jti, user.id, parseInt(this.jwtExpiration, 10));
+        await this.tokenService.storeJti(jti, agent.id, parseInt(this.jwtExpiration, 10));
 
         return {
             accessToken: token,

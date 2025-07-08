@@ -13,13 +13,13 @@ function getBalanceCacheKey(walletId: number): string {
 export abstract class IWalletService {
     abstract getBalance(walletId: number): Promise<{ balance: string, currency: string, source: 'cache' | 'db' }>;
 
-    abstract findOrCreateWalletByUserId(userId: number): Promise<Wallet>;
+    abstract findOrCreateWalletByAgentId(agentId: number): Promise<Wallet>;
 
-    abstract credit(userId: number, amount: number, description?: string): Promise<any>;
+    abstract credit(agentId: number, amount: number, description?: string): Promise<any>;
 
-    abstract debit(userId: number, amount: number, description?: string): Promise<any>;
+    abstract debit(agentId: number, amount: number, description?: string): Promise<any>;
 
-    abstract getTransactionHistory(userId: number): Promise<any>;
+    abstract getTransactionHistory(agentId: number): Promise<any>;
 }
 
 // Define a type for our cached object for better clarity
@@ -37,8 +37,8 @@ export class WalletService extends IWalletService {
         super()
     }
 
-    findOrCreateWalletByUserId(userId: number): Promise<Wallet> {
-        return this.walletRepository.findOrCreateWalletByUserId(userId);
+    findOrCreateWalletByAgentId(agentId: number): Promise<Wallet> {
+        return this.walletRepository.findOrCreateWalletByAgentId(agentId);
     }
 
     /**
@@ -113,7 +113,7 @@ export class WalletService extends IWalletService {
         const dataToCache: CachedBalance = {balance: updatedWallet.balance, currency: updatedWallet.currency};
         await this.inMemoryClient.set(getBalanceCacheKey(updatedWallet.id), JSON.stringify(dataToCache), {EX: CACHE_TTL_SECONDS});
 
-        await this.alertService.checkForLowBalance(wallet.userId, parseInt(updatedWallet.balance), updatedWallet.currency);
+        await this.alertService.checkForLowBalance(wallet.agentId, parseInt(updatedWallet.balance), updatedWallet.currency);
 
         return updatedWallet;
     }
@@ -122,7 +122,7 @@ export class WalletService extends IWalletService {
      * Gets the last 50 transactions. The limit is handled by the repository.
      */
     public async getTransactionHistory(walletId: number) {
-        const wallet = await this.walletRepository.findOrCreateWalletByUserId(walletId);
+        const wallet = await this.walletRepository.findOrCreateWalletByAgentId(walletId);
         return this.walletRepository.getTransactionHistory(wallet.id);
     }
 }

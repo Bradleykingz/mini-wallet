@@ -6,7 +6,7 @@ import {TokenService} from "../../common/token.service";
 declare global {
     namespace Express {
         interface Request {
-            user?: any;
+            agent?: any;
             jti?: string;
         }
     }
@@ -37,7 +37,7 @@ export async function authMiddleware(req: Request, res: Response, next: NextFunc
             return;
         }
 
-        req.user = decoded; // Attach user payload to request
+        req.agent = decoded; // Attach agent payload to request
         req.jti = decoded.jti; // Attach jti for logout handling
         next();
     } catch (error) {

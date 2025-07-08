@@ -8,7 +8,7 @@ const mockWalletService: jest.Mocked<IWalletService> = {
     credit: jest.fn(),
     debit: jest.fn(),
     getTransactionHistory: jest.fn(),
-    findOrCreateWalletByUserId: jest.fn()
+    findOrCreateWalletByAgentId: jest.fn()
 };
 
 // Helper to create mock Express response object
@@ -32,31 +32,31 @@ describe('WalletController', () => {
 
     describe('GET /balance', () => {
         it('should return the wallet balance with a 200 status code', async () => {
-            req = { user: { id: 1 } };
+            req = { agent: { id: 1 } };
             const wallet = {
                 id: 123,
                 createdAt: new Date(),
-                userId: 1,
+                agentId: 1,
                 balance: "120",
                 currency: "USD" as const,
                 updatedAt: new Date(),
             }
             const balanceData = { balance: '100.0000', currency: "USD", source: 'db' as "cache" | "db" };
-            mockWalletService.findOrCreateWalletByUserId.mockResolvedValue(wallet);
+            mockWalletService.findOrCreateWalletByAgentId.mockResolvedValue(wallet);
             mockWalletService.getBalance.mockResolvedValue(balanceData);
 
             await walletController.getBalance(req as Request, res);
 
-            expect(mockWalletService.findOrCreateWalletByUserId).toHaveBeenCalledWith(1);
+            expect(mockWalletService.findOrCreateWalletByAgentId).toHaveBeenCalledWith(1);
             expect(mockWalletService.getBalance).toHaveBeenCalledWith(123);
             expect(res.status).toHaveBeenCalledWith(200);
             expect(res.json).toHaveBeenCalledWith(balanceData);
         });
 
-        it('should return 500 if the service throws an error (findOrCreateWalletByUserId)', async () => {
-            req = { user: { id: 1 } };
+        it('should return 500 if the service throws an error (findOrCreateWalletByAgentId)', async () => {
+            req = { agent: { id: 1 } };
             const errorMessage = 'Database error';
-            mockWalletService.findOrCreateWalletByUserId.mockRejectedValue(new Error(errorMessage));
+            mockWalletService.findOrCreateWalletByAgentId.mockRejectedValue(new Error(errorMessage));
 
             await walletController.getBalance(req as Request, res);
 
@@ -65,17 +65,17 @@ describe('WalletController', () => {
         });
 
         it('should return 500 if the service throws an error (getBalance)', async () => {
-            req = { user: { id: 1 } };
+            req = { agent: { id: 1 } };
             const errorMessage = 'Balance error';
             const wallet = {
                 id: 123,
                 createdAt: new Date(),
-                userId: 1,
+                agentId: 1,
                 balance: "120",
                 currency: "USD" as const,
                 updatedAt: new Date(),
             }
-            mockWalletService.findOrCreateWalletByUserId.mockResolvedValue(wallet);
+            mockWalletService.findOrCreateWalletByAgentId.mockResolvedValue(wallet);
             mockWalletService.getBalance.mockRejectedValue(new Error(errorMessage));
 
             await walletController.getBalance(req as Request, res);
@@ -88,24 +88,24 @@ describe('WalletController', () => {
     describe('POST /transact', () => {
         it('should credit the wallet and return success', async () => {
             req = {
-                user: { id: 2 },
+                agent: { id: 2 },
                 body: { amount: 100, description: 'Deposit', type: 'credit' }
             };
             const wallet = {
                 id: 22,
                 createdAt: new Date(),
-                userId: 1,
+                agentId: 1,
                 balance: "120",
                 currency: "USD" as const,
                 updatedAt: new Date(),
             }
-            mockWalletService.findOrCreateWalletByUserId.mockResolvedValue(wallet);
+            mockWalletService.findOrCreateWalletByAgentId.mockResolvedValue(wallet);
             const updatedWallet = { balance: '200.00', currency: 'USD' };
             mockWalletService.credit.mockResolvedValue(updatedWallet);
 
             await walletController.transact(req as Request, res);
 
-            expect(mockWalletService.findOrCreateWalletByUserId).toHaveBeenCalledWith(2);
+            expect(mockWalletService.findOrCreateWalletByAgentId).toHaveBeenCalledWith(2);
             expect(mockWalletService.credit).toHaveBeenCalledWith(22, 100, 'Deposit');
             expect(res.status).toHaveBeenCalledWith(200);
             expect(res.json).toHaveBeenCalledWith({
@@ -116,24 +116,24 @@ describe('WalletController', () => {
 
         it('should debit the wallet and return success', async () => {
             req = {
-                user: { id: 4 },
+                agent: { id: 4 },
                 body: { amount: 50, description: 'Withdraw', type: 'debit' }
             };
             const wallet = {
                 id: 44,
                 createdAt: new Date(),
-                userId: 1,
+                agentId: 1,
                 balance: "120",
                 currency: "USD" as const,
                 updatedAt: new Date(),
             }
-            mockWalletService.findOrCreateWalletByUserId.mockResolvedValue(wallet);
+            mockWalletService.findOrCreateWalletByAgentId.mockResolvedValue(wallet);
             const updatedWallet = { balance: '50.00', currency: 'USD' };
             mockWalletService.debit.mockResolvedValue(updatedWallet);
 
             await walletController.transact(req as Request, res);
 
-            expect(mockWalletService.findOrCreateWalletByUserId).toHaveBeenCalledWith(4);
+            expect(mockWalletService.findOrCreateWalletByAgentId).toHaveBeenCalledWith(4);
             expect(mockWalletService.debit).toHaveBeenCalledWith(44, 50, 'Withdraw');
             expect(res.status).toHaveBeenCalledWith(200);
             expect(res.json).toHaveBeenCalledWith({
@@ -144,7 +144,7 @@ describe('WalletController', () => {
 
         it('should return 400 if amount is invalid (negative)', async () => {
             req = {
-                user: { id: 1 },
+                agent: { id: 1 },
                 body: { amount: -10, description: 'Deposit', type: 'credit' }
             };
 
@@ -156,7 +156,7 @@ describe('WalletController', () => {
 
         it('should return 400 if amount is invalid (zero)', async () => {
             req = {
-                user: { id: 1 },
+                agent: { id: 1 },
                 body: { amount: 0, description: 'Deposit', type: 'credit' }
             };
 
@@ -168,7 +168,7 @@ describe('WalletController', () => {
 
         it('should return 400 if amount is invalid (not a number)', async () => {
             req = {
-                user: { id: 1 },
+                agent: { id: 1 },
                 body: { amount: undefined, description: 'Deposit', type: 'credit' }
             };
 
@@ -180,18 +180,18 @@ describe('WalletController', () => {
 
         it('should return 400 if transaction type is invalid', async () => {
             req = {
-                user: { id: 1 },
+                agent: { id: 1 },
                 body: { amount: 10, description: 'Deposit', type: 'invalid' }
             };
             const wallet = {
                 id: 123,
                 createdAt: new Date(),
-                userId: 1,
+                agentId: 1,
                 balance: "120",
                 currency: "USD" as const,
                 updatedAt: new Date(),
             }
-            mockWalletService.findOrCreateWalletByUserId.mockResolvedValue(wallet);
+            mockWalletService.findOrCreateWalletByAgentId.mockResolvedValue(wallet);
 
             await walletController.transact(req as Request, res);
 
@@ -201,18 +201,18 @@ describe('WalletController', () => {
 
         it('should handle service errors gracefully (credit)', async () => {
             req = {
-                user: { id: 1 },
+                agent: { id: 1 },
                 body: { amount: 10, description: 'Deposit', type: 'credit' }
             };
             const wallet = {
                 id: 123,
                 createdAt: new Date(),
-                userId: 1,
+                agentId: 1,
                 balance: "120",
                 currency: "USD" as const,
                 updatedAt: new Date(),
             }
-            mockWalletService.findOrCreateWalletByUserId.mockResolvedValue(wallet);
+            mockWalletService.findOrCreateWalletByAgentId.mockResolvedValue(wallet);
             mockWalletService.credit.mockRejectedValue(new Error('Service error'));
 
             await walletController.transact(req as Request, res);
@@ -223,18 +223,18 @@ describe('WalletController', () => {
 
         it('should handle service errors gracefully (debit)', async () => {
             req = {
-                user: { id: 1 },
+                agent: { id: 1 },
                 body: { amount: 10, description: 'Withdraw', type: 'debit' }
             };
             const wallet = {
                 id: 123,
                 createdAt: new Date(),
-                userId: 1,
+                agentId: 1,
                 balance: "120",
                 currency: "USD" as const,
                 updatedAt: new Date(),
             }
-            mockWalletService.findOrCreateWalletByUserId.mockResolvedValue(wallet);
+            mockWalletService.findOrCreateWalletByAgentId.mockResolvedValue(wallet);
             mockWalletService.debit.mockRejectedValue(new Error('Debit failed'));
 
             await walletController.transact(req as Request, res);
@@ -242,24 +242,24 @@ describe('WalletController', () => {
             expect(mockWalletService.debit).toHaveBeenCalled();
         });
 
-        it('should not call service methods if user object missing', async () => {
+        it('should not call service methods if agent object missing', async () => {
             req = { body: { amount: 10, description: 'Deposit', type: 'credit' } };
 
             // @ts-ignore
             await walletController.transact(req as Request, res);
 
             // Will throw error, but not call service
-            expect(mockWalletService.findOrCreateWalletByUserId).not.toHaveBeenCalled();
+            expect(mockWalletService.findOrCreateWalletByAgentId).not.toHaveBeenCalled();
         });
     });
 
     describe('GET /history', () => {
         it('should return the transaction history', async () => {
-            req = { user: { id: 3 } };
+            req = { agent: { id: 3 } };
             const wallet = {
                 id: 33,
                 createdAt: new Date(),
-                userId: 1,
+                agentId: 1,
                 balance: "120",
                 currency: "USD" as const,
                 updatedAt: new Date(),
@@ -272,21 +272,21 @@ describe('WalletController', () => {
                 description: 'Deposit',
                 createdAt: new Date()
             }];
-            mockWalletService.findOrCreateWalletByUserId.mockResolvedValue(wallet);
+            mockWalletService.findOrCreateWalletByAgentId.mockResolvedValue(wallet);
             mockWalletService.getTransactionHistory.mockResolvedValue(history);
 
             await walletController.getHistory(req as Request, res);
 
-            expect(mockWalletService.findOrCreateWalletByUserId).toHaveBeenCalledWith(3);
+            expect(mockWalletService.findOrCreateWalletByAgentId).toHaveBeenCalledWith(3);
             expect(mockWalletService.getTransactionHistory).toHaveBeenCalledWith(33);
             expect(res.status).toHaveBeenCalledWith(200);
             expect(res.json).toHaveBeenCalledWith(history);
         });
 
-        it('should return 500 if the service throws an error (findOrCreateWalletByUserId)', async () => {
-            req = { user: { id: 1 } };
+        it('should return 500 if the service throws an error (findOrCreateWalletByAgentId)', async () => {
+            req = { agent: { id: 1 } };
             const errorMessage = 'Failed to fetch wallet';
-            mockWalletService.findOrCreateWalletByUserId.mockRejectedValue(new Error(errorMessage));
+            mockWalletService.findOrCreateWalletByAgentId.mockRejectedValue(new Error(errorMessage));
 
             await walletController.getHistory(req as Request, res);
 
@@ -295,17 +295,17 @@ describe('WalletController', () => {
         });
 
         it('should return 500 if the service throws an error (getTransactionHistory)', async () => {
-            req = { user: { id: 2 } };
+            req = { agent: { id: 2 } };
             const wallet = {
                 id: 123,
                 createdAt: new Date(),
-                userId: 1,
+                agentId: 1,
                 balance: "120",
                 currency: "USD" as const,
                 updatedAt: new Date(),
             }
             const errorMessage = 'Failed to fetch history';
-            mockWalletService.findOrCreateWalletByUserId.mockResolvedValue(wallet);
+            mockWalletService.findOrCreateWalletByAgentId.mockResolvedValue(wallet);
             mockWalletService.getTransactionHistory.mockRejectedValue(new Error(errorMessage));
 
             await walletController.getHistory(req as Request, res);

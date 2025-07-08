@@ -30,7 +30,7 @@ const mockTx = () => ({
 
 const mockWallet = {
     id: 1,
-    userId: 123,
+    agentId: 123,
     balance: '100.0000',
     currency: 'USD',
     updatedAt: new Date(),
@@ -65,10 +65,10 @@ describe('WalletRepository', () => {
         repo = new WalletRepository(db);
     });
 
-    describe('findOrCreateWalletByUserId', () => {
+    describe('findOrCreateWalletByAgentId', () => {
         it('returns existing wallet if found', async () => {
             db.query.wallets.findFirst.mockResolvedValueOnce(mockWallet);
-            const result = await repo.findOrCreateWalletByUserId(123);
+            const result = await repo.findOrCreateWalletByAgentId(123);
             expect(db.query.wallets.findFirst).toHaveBeenCalledWith({where: expect.anything()});
             expect(result).toBe(mockWallet);
         });
@@ -79,7 +79,7 @@ describe('WalletRepository', () => {
                 values: jest.fn().mockReturnThis(),
                 returning: jest.fn().mockResolvedValueOnce([mockWallet]),
             });
-            const result = await repo.findOrCreateWalletByUserId(123);
+            const result = await repo.findOrCreateWalletByAgentId(123);
             expect(db.insert).toHaveBeenCalled();
             expect(result).toBe(mockWallet);
         });

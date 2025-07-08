@@ -4,7 +4,7 @@ import {InMemoryClient} from '../../platform/in-memory/in-memory.client';
 
 // Mock the dependencies
 const mockWalletRepository: jest.Mocked<IWalletRepository> = {
-    findOrCreateWalletByUserId: jest.fn(),
+    findOrCreateWalletByAgentId: jest.fn(),
     findWalletById: jest.fn(),
     createTransaction: jest.fn(),
     getTransactionHistory: jest.fn(),
@@ -39,10 +39,10 @@ describe('WalletService', () => {
         });
 
         it('should return balance from db and set cache if not available in cache', async () => {
-            const userId = 1;
+            const agentId = 1;
             const wallet = {
                 id: 1,
-                userId,
+                agentId,
                 balance: '150.0000',
                 createdAt: new Date(),
                 updatedAt: new Date(),
@@ -51,11 +51,11 @@ describe('WalletService', () => {
             mockInMemoryClient.get.mockResolvedValue(null);
             mockWalletRepository.findWalletById.mockResolvedValue(wallet);
 
-            const result = await walletService.getBalance(userId);
+            const result = await walletService.getBalance(agentId);
 
             expect(result).toEqual({balance: wallet.balance, currency: 'USD', source: 'db'});
             expect(mockInMemoryClient.get).toHaveBeenCalledWith(`wallet:${wallet.id}:balance`);
-            expect(mockWalletRepository.findWalletById).toHaveBeenCalledWith(userId);
+            expect(mockWalletRepository.findWalletById).toHaveBeenCalledWith(agentId);
             expect(mockInMemoryClient.set).toHaveBeenCalledWith(`wallet:${wallet.id}:balance`, JSON.stringify({balance: wallet.balance, currency: wallet.currency}), {EX: 300});
         });
     });
@@ -67,12 +67,12 @@ describe('WalletService', () => {
         });
 
         it('should credit the wallet and update the cache', async () => {
-            const userId = 1;
+            const agentId = 1;
             const amount = 50;
             const description = 'Top-up';
             const wallet = {
                 id: 1,
-                userId,
+                agentId,
                 balance: '100.0000',
                 createdAt: new Date(),
                 updatedAt: new Date(),
@@ -80,13 +80,13 @@ describe('WalletService', () => {
             };
             const updatedWallet = {...wallet, balance: '150.0000'};
 
-            mockWalletRepository.findOrCreateWalletByUserId.mockResolvedValue(wallet);
+            mockWalletRepository.findOrCreateWalletByAgentId.mockResolvedValue(wallet);
             mockWalletRepository.createTransaction.mockResolvedValue(updatedWallet);
 
-            const result = await walletService.credit(userId, amount, description);
+            const result = await walletService.credit(agentId, amount, description);
 
             expect(result).toEqual(updatedWallet);
-            expect(mockWalletRepository.findWalletById).toHaveBeenCalledWith(userId);
+            expect(mockWalletRepository.findWalletById).toHaveBeenCalledWith(agentId);
             expect(mockWalletRepository.createTransaction).toHaveBeenCalledWith({
                 walletId: updatedWallet.id,
                 currency: updatedWallet.currency,
@@ -113,7 +113,7 @@ describe('WalletService', () => {
             const description = 'Purchase';
             const wallet = {
                 id: 1,
-                userId: walletId,
+                agentId: walletId,
                 balance: '150.0000',
                 createdAt: new Date(),
                 updatedAt: new Date(),
@@ -121,7 +121,7 @@ describe('WalletService', () => {
             };
             const updatedWallet = {...wallet, balance: '120.0000'};
 
-            mockWalletRepository.findOrCreateWalletByUserId.mockResolvedValue(wallet);
+            mockWalletRepository.findOrCreateWalletByAgentId.mockResolvedValue(wallet);
             mockWalletRepository.createTransaction.mockResolvedValue(updatedWallet);
 
             const result = await walletService.debit(walletId, amount, description);
@@ -143,11 +143,11 @@ describe('WalletService', () => {
     });
 
     describe('getTransactionHistory', () => {
-        it('should return the transaction history for a user', async () => {
-            const userId = 1;
+        it('should return the transaction history for a agent', async () => {
+            const agentId = 1;
             const wallet = {
                 id: 1,
-                userId,
+                agentId,
                 balance: '120.0000',
                 createdAt: new Date(),
                 updatedAt: new Date(),
@@ -167,13 +167,13 @@ describe('WalletService', () => {
                 updatedAt: new Date()
             }];
 
-            mockWalletRepository.findOrCreateWalletByUserId.mockResolvedValue(wallet);
+            mockWalletRepository.findOrCreateWalletByAgentId.mockResolvedValue(wallet);
             mockWalletRepository.getTransactionHistory.mockResolvedValue(history);
 
-            const result = await walletService.getTransactionHistory(userId);
+            const result = await walletService.getTransactionHistory(agentId);
 
             expect(result).toEqual(history);
-            expect(mockWalletRepository.findOrCreateWalletByUserId).toHaveBeenCalledWith(userId);
+            expect(mockWalletRepository.findOrCreateWalletByAgentId).toHaveBeenCalledWith(agentId);
             expect(mockWalletRepository.getTransactionHistory).toHaveBeenCalledWith(wallet.id);
         });
     });

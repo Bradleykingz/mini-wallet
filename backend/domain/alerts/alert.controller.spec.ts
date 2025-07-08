@@ -18,7 +18,7 @@ describe('AlertController', () => {
     let responseStatus: jest.Mock;
     let responseSend: jest.Mock;
 
-    const userId = 123;
+    const agentId = 123;
 
     beforeEach(() => {
         mockAlertService = new MockedAlertService(
@@ -37,7 +37,7 @@ describe('AlertController', () => {
         }));
 
         mockRequest = {
-            user: {sub: userId}, // Assuming user ID is from a JWT payload or middleware
+            agent: {sub: agentId}, // Assuming agent ID is from a JWT payload or middleware
             body: {},
         };
 
@@ -55,7 +55,8 @@ describe('AlertController', () => {
                     id: 1,
                     message: 'hi',
                     createdAt: new Date(),
-                    userId,
+                    agentId,
+                    title: 'Test Alert',
                     level: "info" as const,
                     isRead: false
                 }], source: 'db' as const
@@ -64,7 +65,7 @@ describe('AlertController', () => {
 
             await controller.getActiveAlerts(mockRequest as Request, mockResponse as Response);
 
-            expect(mockAlertService.getActiveAlerts).toHaveBeenCalledWith(userId);
+            expect(mockAlertService.getActiveAlerts).toHaveBeenCalledWith(agentId);
             expect(responseStatus).toHaveBeenCalledWith(200);
             expect(responseJson).toHaveBeenCalledWith(serviceResult);
         });
@@ -86,7 +87,7 @@ describe('AlertController', () => {
 
             await controller.markAsRead(mockRequest as Request, mockResponse as Response);
 
-            expect(mockAlertService.markAlertsAsRead).toHaveBeenCalledWith(userId, [1, 2, 3]);
+            expect(mockAlertService.markAlertsAsRead).toHaveBeenCalledWith(agentId, [1, 2, 3]);
             expect(responseStatus).toHaveBeenCalledWith(204);
             expect(responseSend).toHaveBeenCalled();
         });

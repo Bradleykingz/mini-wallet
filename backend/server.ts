@@ -11,7 +11,7 @@ import { TransactionsRepository } from "./domain/transactions/transactions.repos
 import { WalletRepository } from "./domain/wallet/wallet.repository";
 import { MockPaymentProvider } from "./platform/payments/mock.provider";
 import { AlertService } from "./domain/alerts/alert.service";
-import { UserRepository } from "./domain/users/users.repository";
+import { AgentRepository } from "./domain/agents/agents.repository";
 import { AlertRouter } from "./domain/alerts/alert.routes";
 import { WalletService } from "./domain/wallet/wallet.service";
 import {AuthController} from "./domain/auth/auth.controller";
@@ -52,9 +52,9 @@ const port = parseInt(process.env.PORT || "2499", 10);
     server.use('/api/auth', authRouter.getRouter());
 
 
-    const usersRepository = new UserRepository();
+    const agentsRepository = new AgentRepository();
     const alertRepository = new AlertRepository();
-    const alertService = new AlertService(alertRepository, usersRepository, redisClient);
+    const alertService = new AlertService(alertRepository, agentsRepository, redisClient);
 
     const walletRepository = new WalletRepository(db);
     const walletService = new WalletService(walletRepository, alertService, redisClient);

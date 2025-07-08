@@ -1,4 +1,4 @@
-import axios, {AxiosInstance, AxiosResponse, RawAxiosRequestHeaders} from "axios";
+import axios, {AxiosInstance, RawAxiosRequestHeaders} from "axios";
 import {Tokens} from "../../types";
 import {toast} from "sonner";
 
@@ -17,8 +17,8 @@ class APIClient {
                 if (
                     err.response?.status === 403 || err.response?.status === 401
                 ) {
-                    // localStorage.removeItem("tokens");
-                    // window.location.href = "/login";
+                    localStorage.removeItem("tokens");
+                    window.location.href = "/login";
                     toast.error("Please log in to continue");
                 } else {
                     console.error("unknown error", err);
@@ -60,41 +60,21 @@ class APIClient {
     transact(amount: number, type: "credit" | "debit", description?: string) {
         return this.client.post("/wallet/transact/", {amount, type, description}).then(res => res.data);
     }
-
-    register(name: string, email: string, password1: string, password2: string) {
-        return this.client.post("/auth/signup/", {name, email, password1, password2}).then(res => res.data);
-    }
-
-    getTokens() {
-        const tokens = localStorage.getItem("tokens");
-        if (!tokens) {
-            return null;
-        }
-
-        return JSON.parse(tokens) as Tokens;
-    }
 }
-
-let api: APIClient | null = null;
 
 export const getApi = (): APIClient => {
     if (typeof window === "undefined") {
         throw new Error("APIClient can only be used in the browser");
     }
 
-    if (!api) {
-        api = new APIClient(process.env.API_URL || "http://localhost:2499/api");
-    }
-
-    return api;
+    return new APIClient(process.env.API_URL || "http://localhost:2499/api");
 };
 
 export const fetcher = async (url: string) => {
     try {
         const client = getApi();
         const cleanedUrl = url.replace(/^\/api/, "");
-        const result = await client.fetcher(cleanedUrl);
-        return result;
+        return client.fetcher(cleanedUrl);
     } catch (err) {
         console.error("Fetcher error", err);
         throw err;

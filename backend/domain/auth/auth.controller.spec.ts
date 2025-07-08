@@ -5,7 +5,7 @@ import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { IAuthRepository } from './auth.repository';
 import { TokenService } from '../../common/token.service'; // Assuming path
-import { User } from '../../db/schema';
+import { Agent } from '../../db/schema';
 
 // --- Mocks Setup ---
 
@@ -63,15 +63,15 @@ describe('Auth Integration (Controller + Service)', () => {
 
     // === Test the 'register' flow ===
     describe('POST /register', () => {
-        it('should create a new user, hash the password, and return the user object without the password', async () => {
+        it('should create a new agent, hash the password, and return the agent object without the password', async () => {
             // Arrange
             req = {
                 body: { email: 'new@example.com', password: 'password123' },
             };
-            const newUser: User = { id: 1, email: 'new@example.com', password: 'hashed_password', alertThreshold: "10", createdAt: new Date() };
+            const newAgent: Agent = { id: 1, email: 'new@example.com', password: 'hashed_password', alertThreshold: "10", createdAt: new Date() };
 
             // Configure the mock repository's behavior for this test
-            mockAuthRepository.findOrCreate.mockResolvedValue(newUser);
+            mockAuthRepository.findOrCreate.mockResolvedValue(newAgent);
 
             // Act
             await authController.register(req as Request, res);
@@ -84,16 +84,16 @@ describe('Auth Integration (Controller + Service)', () => {
             expect(res.status).toHaveBeenCalledWith(201);
             expect(res.json).toHaveBeenCalledWith({
                 message: 'Registration successful',
-                user: { id: 1, email: 'new@example.com', alertThreshold: "10", createdAt: newUser.createdAt }, // Note: password is not here
+                agent: { id: 1, email: 'new@example.com', alertThreshold: "10", createdAt: newAgent.createdAt }, // Note: password is not here
             });
         });
 
-        it('should return 400 if the service throws an error (e.g., user exists)', async () => {
+        it('should return 400 if the service throws an error (e.g., agent exists)', async () => {
             // Arrange
             req = {
                 body: { email: 'exists@example.com', password: 'password123' },
             };
-            const errorMessage = 'User with this email already exists';
+            const errorMessage = 'Agent with this email already exists';
             mockAuthRepository.findOrCreate.mockRejectedValue(new Error(errorMessage));
 
             // Act
@@ -120,14 +120,14 @@ describe('Auth Integration (Controller + Service)', () => {
 
     // === Test the 'login' flow ===
     describe('POST /login', () => {
-        const mockUser: User = { id: 2, email: 'user@example.com', password: 'hashed_password_abc', alertThreshold: "10", createdAt: new Date() };
+        const mockAgent: Agent = { id: 2, email: 'agent@example.com', password: 'hashed_password_abc', alertThreshold: "10", createdAt: new Date() };
 
         it('should log in successfully if credentials are valid', async () => {
             // Arrange
-            req = { body: { email: 'user@example.com', password: 'correct_password' } };
+            req = { body: { email: 'agent@example.com', password: 'correct_password' } };
 
             // Mock the dependency chain
-            mockAuthRepository.findByEmail.mockResolvedValue(mockUser);
+            mockAuthRepository.findByEmail.mockResolvedValue(mockAgent);
             (mockedBcrypt.compare as jest.Mock).mockResolvedValue(true);
             mockTokenService.generateToken.mockReturnValue('fake-jwt-token');
 
@@ -136,9 +136,9 @@ describe('Auth Integration (Controller + Service)', () => {
 
             // Assert
             // 1. Verify service logic
-            expect(mockAuthRepository.findByEmail).toHaveBeenCalledWith('user@example.com');
+            expect(mockAuthRepository.findByEmail).toHaveBeenCalledWith('agent@example.com');
             // expect(mockedBcrypt.compare).toHaveBeenCalledWith('correct_password', 'hashed_password_abc');
-            expect(mockTokenService.generateToken).toHaveBeenCalledWith('mock-jti-12345', { id: 2, email: 'user@example.com' });
+            expect(mockTokenService.generateToken).toHaveBeenCalledWith('mock-jti-12345', { id: 2, email: 'agent@example.com' });
             expect(mockTokenService.storeJti).toHaveBeenCalledWith('mock-jti-12345', 2, 3600);
 
             // 2. Verify controller response
@@ -148,7 +148,7 @@ describe('Auth Integration (Controller + Service)', () => {
             });
         });
 
-        it('should return 401 if user is not found', async () => {
+        it('should return 401 if agent is not found', async () => {
             // Arrange
             req = { body: { email: 'notfound@example.com', password: 'any_password' } };
             mockAuthRepository.findByEmail.mockResolvedValue(null);
@@ -164,8 +164,8 @@ describe('Auth Integration (Controller + Service)', () => {
 
         it('should return 401 if password does not match', async () => {
             // Arrange
-            req = { body: { email: 'user@example.com', password: 'wrong_password' } };
-            mockAuthRepository.findByEmail.mockResolvedValue(mockUser);
+            req = { body: { email: 'agent@example.com', password: 'wrong_password' } };
+            mockAuthRepository.findByEmail.mockResolvedValue(mockAgent);
             (mockedBcrypt.compare as jest.Mock).mockResolvedValue(false);
 
             // Act
@@ -188,7 +188,7 @@ describe('Auth Integration (Controller + Service)', () => {
         });
 
         it('should return 400 if password is missing', async () => {
-            req = { body: { email: 'user@example.com' } };
+            req = { body: { email: 'agent@example.com' } };
 
             await authController.login(req as Request, res);
 

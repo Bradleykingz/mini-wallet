@@ -18,13 +18,13 @@ export abstract class ITransactionService {
     /**
      * Initiates a cash-in transaction, calling the payment provider and updating the wallet balance.
      */
-    abstract cashIn(userId: number, amount: number): Promise<any>;
+    abstract cashIn(agentId: number, amount: number): Promise<any>;
 
     /**
      * Initiates a cash-out transaction, calling the payment provider and updating the wallet balance.
-     * If the provider fails, it refunds the user.
+     * If the provider fails, it refunds the agent.
      */
-    abstract cashOut(userId: number, amount: number): Promise<any>;
+    abstract cashOut(agentId: number, amount: number): Promise<any>;
 
 }
 
@@ -79,14 +79,14 @@ export class TransactionService extends ITransactionService {
         } catch (error) {
             const err = error instanceof Error ? error : new Error('Unknown error occurred');
             // If the provider fails, we don't touch our DB or cache.
-            console.error(`[TransactionService] Cash-in failed for user ${walletId}:`, error);
+            console.error(`[TransactionService] Cash-in failed for agent ${walletId}:`, error);
             throw new Error(`Payment provider failed: ${err.message}`);
         }
     }
 
-    public async cashOut(userId: number, amount: number) {
+    public async cashOut(agentId: number, amount: number) {
         const referenceId = uuidv4();
-        const wallet = await this.walletRepo.findWalletById(userId);
+        const wallet = await this.walletRepo.findWalletById(agentId);
 
         // 1. Atomically debit funds and create a PENDING transaction record.
         // This reserves the funds and prevents double-spending.
@@ -101,10 +101,10 @@ export class TransactionService extends ITransactionService {
         });
 
         // 2. Invalidate cache immediately since balance has changed.
-        await this.cache.del(getBalanceCacheKey(userId));
+        await this.cache.del(getBalanceCacheKey(agentId));
 
         /// 3. trigger alert check
-        await this.alertService.checkForLowBalance(userId, parseFloat(updatedWallet.balance), updatedWallet.currency);
+        await this.alertService.checkForLowBalance(agentId, parseFloat(updatedWallet.balance), updatedWallet.currency);
 
         try {
             // 3. Call the external provider
@@ -120,10 +120,10 @@ export class TransactionService extends ITransactionService {
             return completedTx; // The digital receipt
         } catch (error) {
             const err = error instanceof Error ? error : new Error('Unknown error occurred');
-            // 5. On provider failure, we must REFUND the user.
-            console.error(`[TransactionService] Cash-out failed for user ${userId}, initiating refund:`, error);
+            // 5. On provider failure, we must REFUND the agent.
+            console.error(`[TransactionService] Cash-out failed for agent ${agentId}, initiating refund:`, error);
 
-            // Create a compensating transaction (credit) to refund the user
+            // Create a compensating transaction (credit) to refund the agent
             await this.transactionRepo.createAndUpdateBalance({
                 referenceId: uuidv4(), // A new reference for the refund itself
                 walletId: wallet.id,
@@ -138,7 +138,7 @@ export class TransactionService extends ITransactionService {
             await this.transactionRepo.updateStatus(referenceId, 'failed');
 
             // Invalidate cache again because balance has changed due to the refund
-            await this.cache.del(getBalanceCacheKey(userId));
+            await this.cache.del(getBalanceCacheKey(agentId));
 
             throw new Error(`Withdrawal failed and funds have been returned to your wallet. Reason: ${err.message}`);
         }

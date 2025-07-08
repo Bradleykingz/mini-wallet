@@ -4,15 +4,15 @@ import {eq} from 'drizzle-orm';
 
 export abstract class IWalletRepository {
     /**
-     * Finds a wallet by user ID. If it doesn't exist, it creates one.
-     * This is useful to ensure every user has a wallet.
+     * Finds a wallet by agent ID. If it doesn't exist, it creates one.
+     * This is useful to ensure every agent has a wallet.
      */
-    abstract findOrCreateWalletByUserId(userId: number): Promise<typeof wallets.$inferSelect>;
+    abstract findOrCreateWalletByAgentId(agentId: number): Promise<typeof wallets.$inferSelect>;
 
     abstract findWalletById(walletId: number): Promise<typeof wallets.$inferSelect>;
 
     /**
-     * Retrieves a user's transaction history.
+     * Retrieves a agent's transaction history.
      */
     abstract getTransactionHistory(walletId: number): Promise<typeof transactions.$inferSelect[]>;
 
@@ -30,16 +30,16 @@ export class WalletRepository extends IWalletRepository {
     }
 
     /**
-     * Finds a wallet by user ID. If it doesn't exist, it creates one.
-     * This is useful to ensure every user has a wallet.
+     * Finds a wallet by agent ID. If it doesn't exist, it creates one.
+     * This is useful to ensure every agent has a wallet.
      */
-    public async findOrCreateWalletByUserId(userId: number) {
+    public async findOrCreateWalletByAgentId(agentId: number) {
         let wallet = await this.db.query.wallets.findFirst({
-            where: eq(wallets.userId, userId),
+            where: eq(wallets.agentId, agentId),
         });
 
         if (!wallet) {
-            const [newWallet] = await this.db.insert(wallets).values({userId}).returning();
+            const [newWallet] = await this.db.insert(wallets).values({agentId}).returning();
             wallet = newWallet;
         }
 
@@ -57,7 +57,7 @@ export class WalletRepository extends IWalletRepository {
     }
 
     /**
-     * Retrieves a user's transaction history.
+     * Retrieves a agent's transaction history.
      */
     public async getTransactionHistory(walletId: number) {
         return this.db.query.transactions.findMany({

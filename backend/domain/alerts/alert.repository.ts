@@ -4,19 +4,19 @@ import { and, eq, inArray } from 'drizzle-orm';
 
 export abstract class IAlertRepository {
     /**
-     * Creates a new alert for a user.
+     * Creates a new alert for a agent.
      */
     abstract create(data: NewAlert): Promise<Alert>;
 
     /**
-     * Finds active (unread) alerts for a given user.
+     * Finds active (unread) alerts for a given agent.
      */
-    abstract findActiveByUser(userId: number): Promise<Alert[]>;
+    abstract findActiveByAgent(agentId: number): Promise<Alert[]>;
 
     /**
-     * Marks a list of alerts as read for a specific user to ensure authorization.
+     * Marks a list of alerts as read for a specific agent to ensure authorization.
      */
-    abstract markAsRead(userId: number, alertIds: number[]): Promise<void>;
+    abstract markAsRead(agentId: number, alertIds: number[]): Promise<void>;
 }
 
 export class AlertRepository implements IAlertRepository {
@@ -26,12 +26,12 @@ export class AlertRepository implements IAlertRepository {
     }
 
     /**
-     * Finds active (unread) alerts for a given user.
+     * Finds active (unread) alerts for a given agent.
      */
-    public async findActiveByUser(userId: number): Promise<Alert[]> {
+    public async findActiveByAgent(agentId: number): Promise<Alert[]> {
         return db.query.alerts.findMany({
             where: and(
-                eq(alerts.userId, userId),
+                eq(alerts.agentId, agentId),
                 eq(alerts.isRead, false)
             ),
             orderBy: (alerts, { desc }) => [desc(alerts.createdAt)],
@@ -40,15 +40,15 @@ export class AlertRepository implements IAlertRepository {
     }
 
     /**
-     * Marks a list of alerts as read for a specific user to ensure authorization.
+     * Marks a list of alerts as read for a specific agent to ensure authorization.
      */
-    public async markAsRead(userId: number, alertIds: number[]): Promise<void> {
+    public async markAsRead(agentId: number, alertIds: number[]): Promise<void> {
         if (alertIds.length === 0) return;
 
         await db.update(alerts)
             .set({ isRead: true })
             .where(and(
-                eq(alerts.userId, userId),
+                eq(alerts.agentId, agentId),
                 inArray(alerts.id, alertIds)
             ));
     }

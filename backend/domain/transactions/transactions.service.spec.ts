@@ -25,7 +25,7 @@ class MockTransactionRepo extends ITransactionRepository {
 
 class MockWalletRepo extends IWalletRepository {
     findWalletById = jest.fn();
-    findOrCreateWalletByUserId = jest.fn();
+    findOrCreateWalletByAgentId = jest.fn();
     getTransactionHistory = jest.fn();
     createTransaction = jest.fn();
 }
@@ -56,7 +56,7 @@ describe('TransactionService', () => {
     let mockCache: jest.Mocked<InMemoryClient>;
     let mockAlertService: jest.Mocked<IAlertService>;
 
-    const userId = 1;
+    const agentId = 1;
     const walletId = 1;
     const amount = 100;
     const mockWallet = { id: walletId, currency: 'USD', balance: '1000.00' };
@@ -139,7 +139,7 @@ describe('TransactionService', () => {
             mockPaymentProvider.initiateWithdrawal.mockResolvedValue(providerSuccessResponse);
             mockTransactionRepo.updateStatus.mockResolvedValue(completedTx as any);
 
-            const result = await service.cashOut(userId, amount);
+            const result = await service.cashOut(agentId, amount);
 
             // 1. Debit and create pending tx
             expect(mockTransactionRepo.createAndUpdateBalance).toHaveBeenCalledTimes(1);
@@ -149,10 +149,10 @@ describe('TransactionService', () => {
             }));
 
             // 2. Invalidate cache
-            expect(mockCache.del).toHaveBeenCalledWith(`wallet:${userId}:balance`);
+            expect(mockCache.del).toHaveBeenCalledWith(`wallet:${agentId}:balance`);
 
             // 3. Trigger alert check with NEW balance
-            expect(mockAlertService.checkForLowBalance).toHaveBeenCalledWith(userId, 900.00, 'USD');
+            expect(mockAlertService.checkForLowBalance).toHaveBeenCalledWith(agentId, 900.00, 'USD');
 
             // 4. Call provider
             expect(mockPaymentProvider.initiateWithdrawal).toHaveBeenCalledWith(amount, mockWallet.currency);
@@ -163,7 +163,7 @@ describe('TransactionService', () => {
             expect(result).toEqual(completedTx);
         });
 
-        it('should refund user and mark tx as failed if provider fails', async () => {
+        it('should refund agent and mark tx as failed if provider fails', async () => {
             const providerError = new Error('Withdrawal rejected');
             mockPaymentProvider.initiateWithdrawal.mockRejectedValue(providerError);
 
@@ -171,7 +171,7 @@ describe('TransactionService', () => {
             mockTransactionRepo.createAndUpdateBalance.mockResolvedValueOnce(pendingTxResult as any) // Initial debit
                 .mockResolvedValueOnce({} as any); // Refund credit
 
-            await expect(service.cashOut(userId, amount)).rejects.toThrow(`Withdrawal failed and funds have been returned to your wallet. Reason: ${providerError.message}`);
+            await expect(service.cashOut(agentId, amount)).rejects.toThrow(`Withdrawal failed and funds have been returned to your wallet. Reason: ${providerError.message}`);
 
             // 1. Initial debit
             expect(mockTransactionRepo.createAndUpdateBalance).toHaveBeenCalledWith(expect.objectContaining({ type: 'cash_out' }));
@@ -190,7 +190,7 @@ describe('TransactionService', () => {
 
             // 5. Cache invalidated twice (after debit, after refund)
             expect(mockCache.del).toHaveBeenCalledTimes(2);
-            expect(mockCache.del).toHaveBeenCalledWith(`wallet:${userId}:balance`);
+            expect(mockCache.del).toHaveBeenCalledWith(`wallet:${agentId}:balance`);
         });
     });
 });

@@ -13,7 +13,7 @@ describe('TransactionController', () => {
     let responseJson: jest.Mock;
     let responseStatus: jest.Mock;
 
-    const userId = 456;
+    const agentId = 456;
 
     beforeEach(() => {
         mockTransactionService = new MockedTransactionService({} as any, {} as any, {} as any, {} as any, {} as any) as jest.Mocked<TransactionService>;
@@ -23,7 +23,7 @@ describe('TransactionController', () => {
         responseStatus = jest.fn().mockReturnValue({json: responseJson});
 
         mockRequest = {
-            user: {sub: userId},
+            agent: {sub: agentId},
             body: {},
             params: {},
         };
@@ -88,7 +88,7 @@ describe('TransactionController', () => {
                 updatedWallet: {
                     id: 1,
                     createdAt: new Date(),
-                    userId: 1,
+                    agentId: 1,
                     balance: "1000.00",
                     currency: "USD" as const,
                     updatedAt: new Date(),
@@ -98,7 +98,7 @@ describe('TransactionController', () => {
 
             await controller.transact(mockRequest as Request, mockResponse as Response);
 
-            expect(mockTransactionService.cashIn).toHaveBeenCalledWith(userId, 100);
+            expect(mockTransactionService.cashIn).toHaveBeenCalledWith(agentId, 100);
             expect(responseStatus).toHaveBeenCalledWith(201);
             expect(responseJson).toHaveBeenCalledWith({message: 'Cash-in successful.', receipt: transactionResult});
         });
@@ -147,7 +147,7 @@ describe('TransactionController', () => {
 
             await controller.transact(mockRequest as Request, mockResponse as Response);
 
-            expect(mockTransactionService.cashOut).toHaveBeenCalledWith(userId, 50);
+            expect(mockTransactionService.cashOut).toHaveBeenCalledWith(agentId, 50);
             expect(responseStatus).toHaveBeenCalledWith(200);
             expect(responseJson).toHaveBeenCalledWith({
                 message: 'Cash-out initiated successfully.',

@@ -16,7 +16,7 @@ export class TransactionsController {
 
     async transact(req: Request, res: Response): Promise<void> {
         try {
-            const userId = req.user.id;
+            const agentId = req.agent.id;
             const { amount, type } = req.body; // type: 'cashIn' | 'cashOut'
 
             if (typeof amount !== 'number' || amount <= 0) {
@@ -31,10 +31,10 @@ export class TransactionsController {
 
             let transaction;
             if (type === 'cash_in') {
-                transaction = await this.transactionService.cashIn(userId, amount);
+                transaction = await this.transactionService.cashIn(agentId, amount);
                 res.status(201).json({ message: 'Cash-in successful.', receipt: transaction });
             } else {
-                transaction = await this.transactionService.cashOut(userId, amount);
+                transaction = await this.transactionService.cashOut(agentId, amount);
                 res.status(200).json({ message: 'Cash-out initiated successfully.', receipt: transaction });
             }
         } catch (error: any) {

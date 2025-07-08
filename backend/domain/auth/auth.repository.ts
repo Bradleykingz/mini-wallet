@@ -1,13 +1,13 @@
 import {Db} from "../../db";
 import {eq} from "drizzle-orm";
-import {User, users} from "../../db/schema";
+import {Agent, agents} from "../../db/schema";
 import * as bcrypt from "bcrypt";
 
 export abstract class IAuthRepository {
 
-    abstract findOrCreate(email: string, password: string): Promise<User>;
+    abstract findOrCreate(email: string, password: string): Promise<Agent>;
 
-    abstract findByEmail(email: string): Promise<User | null>;
+    abstract findByEmail(email: string): Promise<Agent | null>;
 }
 export class AuthRepository extends IAuthRepository {
 
@@ -16,32 +16,32 @@ export class AuthRepository extends IAuthRepository {
         super();
     }
 
-    async findOrCreate(email: string, password: string): Promise<User> {
-        const userData = { email, password };
-        const existingUser = await this.db.query.users.findFirst({
-            where: eq(users.email, userData.email),
+    async findOrCreate(email: string, password: string): Promise<Agent> {
+        const agentData = { email, password };
+        const existingAgent = await this.db.query.agents.findFirst({
+            where: eq(agents.email, agentData.email),
         });
 
-        if (existingUser) {
-            throw new Error('User with this email already exists');
+        if (existingAgent) {
+            throw new Error('Agent with this email already exists');
         }
 
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        const [newUser] = await this.db.insert(users).values({
-            email: userData.email,
+        const [newAgent] = await this.db.insert(agents).values({
+            email: agentData.email,
             password: hashedPassword,
         }).returning();
 
-        return newUser;
+        return newAgent;
     }
 
-    async findByEmail(email: string): Promise<User | null> {
-        const user = await this.db.query.users.findFirst({
-            where: eq(users.email, email),
+    async findByEmail(email: string): Promise<Agent | null> {
+        const agent = await this.db.query.agents.findFirst({
+            where: eq(agents.email, email),
         });
 
-        return user || null;
+        return agent || null;
     }
 
 

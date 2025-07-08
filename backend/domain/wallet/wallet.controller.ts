@@ -6,8 +6,8 @@ export class WalletController {
 
     async getBalance(req: Request, res: Response): Promise<void> {
         try {
-            const userId = req.user.id;
-            const { id: walletId } = await this.walletService.findOrCreateWalletByUserId(userId);
+            const agentId = req.agent.id;
+            const { id: walletId } = await this.walletService.findOrCreateWalletByAgentId(agentId);
             const balanceData = await this.walletService.getBalance(walletId);
             res.status(200).json(balanceData);
         } catch (error: any) {
@@ -24,8 +24,8 @@ export class WalletController {
                 return;
             }
 
-            const userId = req.user.id;
-            const {id: walletId} = await this.walletService.findOrCreateWalletByUserId(userId);
+            const agentId = req.agent.id;
+            const {id: walletId} = await this.walletService.findOrCreateWalletByAgentId(agentId);
 
             let updatedWallet;
             if (type === 'credit') {
@@ -47,8 +47,8 @@ export class WalletController {
     async getHistory(req: Request, res: Response): Promise<void> {
         try {
 
-            const userId = req.user.id;
-            const { id: walletId } = await this.walletService.findOrCreateWalletByUserId(userId);
+            const agentId = req.agent.id;
+            const { id: walletId } = await this.walletService.findOrCreateWalletByAgentId(agentId);
             const history = await this.walletService.getTransactionHistory(walletId);
             res.status(200).json(history);
         } catch (error: any) {

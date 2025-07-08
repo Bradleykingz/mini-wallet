@@ -83,7 +83,7 @@ describe('TokenService', () => {
     describe('generateToken', () => {
         it('should call jwt.sign with the correct arguments', () => {
             const jti = 'test-jti-123';
-            const payload = { sub: 1, role: 'user' };
+            const payload = { sub: 1, role: 'agent' };
             const expectedSignedToken = 'signed.jwt.token';
 
             (mockJwt.sign as jest.Mock).mockReturnValue(expectedSignedToken);
@@ -107,15 +107,15 @@ describe('TokenService', () => {
     describe('storeJti', () => {
         it('should call the cache client set method with the correct parameters', async () => {
             const jti = 'jti-to-store';
-            const userId = 123;
+            const agentId = 123;
             const expiry = 3600;
 
-            await service.storeJti(jti, userId, expiry);
+            await service.storeJti(jti, agentId, expiry);
 
             expect(mockCache.set).toHaveBeenCalledTimes(1);
             expect(mockCache.set).toHaveBeenCalledWith(
                 jti,
-                userId.toString(),
+                agentId.toString(),
                 { EX: expiry }
             );
         });
@@ -124,7 +124,7 @@ describe('TokenService', () => {
     describe('isJtiStored', () => {
         it('should return true if the cache client returns a value for the JTI', async () => {
             const jti = 'existing-jti';
-            mockCache.get.mockResolvedValue('some-user-id'); // Any non-null value
+            mockCache.get.mockResolvedValue('some-agent-id'); // Any non-null value
 
             const result = await service.isJtiStored(jti);
 

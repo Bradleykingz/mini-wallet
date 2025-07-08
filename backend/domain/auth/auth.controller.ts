@@ -11,8 +11,8 @@ export class AuthController {
                 res.status(400).json({ message: 'Email and password are required' });
                 return;
             }
-            const user = await this.authService.register({ email, password });
-            res.status(201).json({ message: 'Registration successful', user });
+            const agent = await this.authService.register({ email, password });
+            res.status(201).json({ message: 'Registration successful', agent });
         } catch (error: any) {
             res.status(400).json({ message: error.message });
         }

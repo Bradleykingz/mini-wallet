@@ -25,8 +25,8 @@ export class TokenService {
         );
     }
 
-    async storeJti(jti: string, userId: number, expirySeconds: number): Promise<void> {
-        await this.client.set(jti, userId.toString(), {EX: expirySeconds});
+    async storeJti(jti: string, agentId: number, expirySeconds: number): Promise<void> {
+        await this.client.set(jti, agentId.toString(), {EX: expirySeconds});
     }
 
     async isJtiStored(jti: string): Promise<boolean> {
