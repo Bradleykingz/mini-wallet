@@ -14,12 +14,13 @@ import {Transaction} from "../../../backend/db/schema";
 export default function TransactionTable({transactions}: { transactions: Transaction[] }) {
     return (
         <Table>
-            <TableCaption>A list of your recent invoices.</TableCaption>
+            <TableCaption>A list of your recent transactions.</TableCaption>
             <TableHeader>
                 <TableRow>
                     <TableHead className="w-[100px]">ID</TableHead>
-                    <TableHead>From</TableHead>
                     <TableHead>Status</TableHead>
+                    <TableHead>Date/Time</TableHead>
+                    <TableHead>Description</TableHead>
                     <TableHead className="text-right">Amount</TableHead>
                 </TableRow>
             </TableHeader>
@@ -27,8 +28,9 @@ export default function TransactionTable({transactions}: { transactions: Transac
                 {transactions.map((transaction) => (
                     <TableRow key={transaction.referenceId}>
                         <TableCell className="font-medium">{transaction.referenceId}</TableCell>
-                        <TableCell>Wallet</TableCell>
                         <TableCell>{transaction.status}</TableCell>
+                        <TableCell>{new Date(transaction.createdAt).toLocaleString()}</TableCell>
+                        <TableCell>{transaction.description || "No description"}</TableCell>
                         <TableCell className="text-right">
                             {
                                 transaction.type == "debit" || transaction.type == "cash_out" ? (
@@ -53,7 +55,7 @@ export default function TransactionTable({transactions}: { transactions: Transac
             </TableBody>
             <TableFooter>
                 <TableRow>
-                    <TableCell colSpan={3}>Balance</TableCell>
+                    <TableCell colSpan={4}>Balance</TableCell>
                     <TableCell className="text-right">
                         {
                             transactions.reduce((total, transaction) => {
