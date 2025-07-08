@@ -4,7 +4,7 @@ import { Request, Response } from 'express';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { IAuthRepository } from './auth.repository';
-import { TokenHelper } from '../../common/token.helper'; // Assuming path
+import { TokenService } from '../../common/token.service'; // Assuming path
 import { User } from '../../db/schema';
 
 // --- Mocks Setup ---
@@ -21,7 +21,7 @@ const mockAuthRepository: jest.Mocked<IAuthRepository> = {
     findByEmail: jest.fn(),
 };
 
-const mockTokenHelper: jest.Mocked<TokenHelper> = {
+const mockTokenService: jest.Mocked<TokenService> = {
     generateToken: jest.fn(),
     storeJti: jest.fn(),
     clearJti: jest.fn(),
@@ -56,7 +56,7 @@ describe('Auth Integration (Controller + Service)', () => {
     beforeEach(() => {
         jest.clearAllMocks();
 
-        authService = new AuthService(mockAuthRepository, mockTokenHelper);
+        authService = new AuthService(mockAuthRepository, mockTokenService);
         authController = new AuthController(authService);
         res = getMockRes();
     });
@@ -68,7 +68,7 @@ describe('Auth Integration (Controller + Service)', () => {
             req = {
                 body: { email: 'new@example.com', password: 'password123' },
             };
-            const newUser: User = { id: 1, email: 'new@example.com', password: 'hashed_password', createdAt: new Date() };
+            const newUser: User = { id: 1, email: 'new@example.com', password: 'hashed_password', alertThreshold: "10", createdAt: new Date() };
 
             // Configure the mock repository's behavior for this test
             mockAuthRepository.findOrCreate.mockResolvedValue(newUser);
@@ -84,7 +84,7 @@ describe('Auth Integration (Controller + Service)', () => {
             expect(res.status).toHaveBeenCalledWith(201);
             expect(res.json).toHaveBeenCalledWith({
                 message: 'Registration successful',
-                user: { id: 1, email: 'new@example.com', createdAt: newUser.createdAt }, // Note: password is not here
+                user: { id: 1, email: 'new@example.com', alertThreshold: "10", createdAt: newUser.createdAt }, // Note: password is not here
             });
         });
 
@@ -120,7 +120,7 @@ describe('Auth Integration (Controller + Service)', () => {
 
     // === Test the 'login' flow ===
     describe('POST /login', () => {
-        const mockUser: User = { id: 2, email: 'user@example.com', password: 'hashed_password_abc', createdAt: new Date() };
+        const mockUser: User = { id: 2, email: 'user@example.com', password: 'hashed_password_abc', alertThreshold: "10", createdAt: new Date() };
 
         it('should log in successfully if credentials are valid', async () => {
             // Arrange
@@ -128,8 +128,8 @@ describe('Auth Integration (Controller + Service)', () => {
 
             // Mock the dependency chain
             mockAuthRepository.findByEmail.mockResolvedValue(mockUser);
-            // mockedBcrypt.compare.mockResolvedValue(true);
-            mockTokenHelper.generateToken.mockReturnValue('fake-jwt-token');
+            (mockedBcrypt.compare as jest.Mock).mockResolvedValue(true);
+            mockTokenService.generateToken.mockReturnValue('fake-jwt-token');
 
             // Act
             await authController.login(req as Request, res);
@@ -138,13 +138,12 @@ describe('Auth Integration (Controller + Service)', () => {
             // 1. Verify service logic
             expect(mockAuthRepository.findByEmail).toHaveBeenCalledWith('user@example.com');
             // expect(mockedBcrypt.compare).toHaveBeenCalledWith('correct_password', 'hashed_password_abc');
-            expect(mockTokenHelper.generateToken).toHaveBeenCalledWith('mock-jti-12345', { id: 2, email: 'user@example.com' });
-            expect(mockTokenHelper.storeJti).toHaveBeenCalledWith('mock-jti-12345', 2, 3600);
+            expect(mockTokenService.generateToken).toHaveBeenCalledWith('mock-jti-12345', { id: 2, email: 'user@example.com' });
+            expect(mockTokenService.storeJti).toHaveBeenCalledWith('mock-jti-12345', 2, 3600);
 
             // 2. Verify controller response
             expect(res.status).toHaveBeenCalledWith(200);
             expect(res.json).toHaveBeenCalledWith({
-                message: 'Login successful',
                 accessToken: 'fake-jwt-token',
             });
         });
@@ -167,7 +166,7 @@ describe('Auth Integration (Controller + Service)', () => {
             // Arrange
             req = { body: { email: 'user@example.com', password: 'wrong_password' } };
             mockAuthRepository.findByEmail.mockResolvedValue(mockUser);
-            // mockedBcrypt.compare.mockResolvedValue(false); // <--- Key change for this test
+            (mockedBcrypt.compare as jest.Mock).mockResolvedValue(false);
 
             // Act
             await authController.login(req as Request, res);
@@ -175,7 +174,27 @@ describe('Auth Integration (Controller + Service)', () => {
             // Assert
             expect(res.status).toHaveBeenCalledWith(401);
             expect(res.json).toHaveBeenCalledWith({ message: 'Invalid email or password' });
-            expect(mockTokenHelper.generateToken).not.toHaveBeenCalled();
+            expect(mockTokenService.generateToken).not.toHaveBeenCalled();
+        });
+
+        it('should return 400 if email is missing', async () => {
+            req = { body: { password: 'some_password' } };
+
+            await authController.login(req as Request, res);
+
+            expect(res.status).toHaveBeenCalledWith(400);
+            expect(res.json).toHaveBeenCalledWith({ message: 'Email and password are required' });
+            expect(mockAuthRepository.findByEmail).not.toHaveBeenCalled();
+        });
+
+        it('should return 400 if password is missing', async () => {
+            req = { body: { email: 'user@example.com' } };
+
+            await authController.login(req as Request, res);
+
+            expect(res.status).toHaveBeenCalledWith(400);
+            expect(res.json).toHaveBeenCalledWith({ message: 'Email and password are required' });
+            expect(mockAuthRepository.findByEmail).not.toHaveBeenCalled();
         });
     });
 
@@ -184,14 +203,14 @@ describe('Auth Integration (Controller + Service)', () => {
         it('should successfully log out by clearing the JTI', async () => {
             // Arrange
             req = { jti: 'mock-jti-to-clear' }; // JTI attached by auth middleware
-            mockTokenHelper.clearJti.mockResolvedValue(undefined);
+            mockTokenService.clearJti.mockResolvedValue(undefined);
 
             // Act
             await authController.logout(req as Request, res);
 
             // Assert
             // 1. Verify service logic
-            expect(mockTokenHelper.clearJti).toHaveBeenCalledWith('mock-jti-to-clear');
+            expect(mockTokenService.clearJti).toHaveBeenCalledWith('mock-jti-to-clear');
 
             // 2. Verify controller response
             expect(res.status).toHaveBeenCalledWith(200);
@@ -201,7 +220,7 @@ describe('Auth Integration (Controller + Service)', () => {
         it('should return 500 if clearing the JTI fails', async () => {
             // Arrange
             req = { jti: 'mock-jti-to-clear' };
-            mockTokenHelper.clearJti.mockRejectedValue(new Error('Redis connection failed'));
+            mockTokenService.clearJti.mockRejectedValue(new Error('Redis connection failed'));
 
             // Act
             await authController.logout(req as Request, res);
@@ -221,7 +240,7 @@ describe('Auth Integration (Controller + Service)', () => {
             // Assert
             expect(res.status).toHaveBeenCalledWith(400);
             expect(res.json).toHaveBeenCalledWith({ message: 'Token not provided or invalid' });
-            expect(mockTokenHelper.clearJti).not.toHaveBeenCalled();
+            expect(mockTokenService.clearJti).not.toHaveBeenCalled();
         });
     });
 });

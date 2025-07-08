@@ -4,11 +4,10 @@ import {WalletService} from "../../domain/wallet/wallet.service";
 
 export class WalletRouter {
 
-    private readonly router: Router;
+    private readonly router: Router = Router();
     private readonly walletController: WalletController;
 
-    constructor(router: Router, service: WalletService) {
-        this.router = router;
+    constructor(service: WalletService) {
         this.walletController = new WalletController(service);
 
         this.initializeRoutes();

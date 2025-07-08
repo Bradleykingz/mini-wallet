@@ -1,11 +1,11 @@
 import {Router} from 'express';
-import {AlertController} from '../../domain/alerts/alert.controller';
-import {AlertService} from '../../domain/alerts/alert.service';
+import {AlertController} from './alert.controller';
+import {AlertService} from './alert.service';
 
 export class AlertRouter {
     private alertController: AlertController;
-
-    constructor(private router: Router, alertService: AlertService) {
+    private router: Router = Router();
+    constructor(alertService: AlertService) {
         this.alertController = new AlertController(alertService);
         this.initializeRoutes()
     }

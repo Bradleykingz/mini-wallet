@@ -1,6 +1,6 @@
 import 'dotenv/config';
 import { createClient, RedisClientType } from 'redis';
-import {InMemoryClient} from "../../platform/in-memory/in-memory.client";
+import {InMemoryClient} from "./in-memory.client";
 
 export class RedisClient extends InMemoryClient {
     private client: RedisClientType;

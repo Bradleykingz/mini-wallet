@@ -1,12 +1,14 @@
 import {Router} from 'express';
 import {TransactionService} from "../../domain/transactions/transactions.service";
 import {TransactionController} from "../../domain/transactions/transactions.controller";
+import {authMiddleware} from "../auth/auth.middleware";
 
 export class TransactionsRouter {
     private readonly controller: TransactionController;
+    private readonly router: Router = Router();
 
-    constructor(private router: Router, transactionService: TransactionService) {
-        // this.router.use(authMiddleware)
+    constructor(transactionService: TransactionService) {
+        this.router.use(authMiddleware)
         this.controller = new TransactionController(transactionService);
         this.initializeRoutes();
     }

@@ -1,8 +1,8 @@
 import * as bcrypt from 'bcrypt';
 import {v4 as uuidv4} from "uuid";
 import {NewUser} from '../../db/schema';
-import {IAuthRepository} from "../../domain/auth/auth.repository";
-import {TokenHelper} from "../../common/token.helper";
+import {IAuthRepository} from "./auth.repository";
+import {TokenService} from "../../common/token.service";
 
 // Exclude password from user object returned to client
 function toUserResponse(user: NewUser) {
@@ -14,7 +14,7 @@ export class AuthService {
     private readonly jwtSecret = process.env.JWT_SECRET!;
     private readonly jwtExpiration = process.env.JWT_EXPIRATION!;
 
-    constructor(private authRepository: IAuthRepository, private tokenService: TokenHelper) {
+    constructor(private authRepository: IAuthRepository, private tokenService: TokenService) {
         if (!this.jwtSecret || !this.jwtExpiration) {
             throw new Error('JWT environment variables not set');
         }

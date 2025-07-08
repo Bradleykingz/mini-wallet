@@ -6,8 +6,8 @@ export class WalletController {
 
     async getBalance(req: Request, res: Response): Promise<void> {
         try {
-            const userId = req.user.sub; // From JWT payload
-            const balanceData = await this.walletService.getBalance(userId);
+            const walletId = parseInt(req.params.walletId);
+            const balanceData = await this.walletService.getBalance(walletId);
             res.status(200).json(balanceData);
         } catch (error: any) {
             res.status(500).json({ message: error.message });
@@ -43,8 +43,8 @@ export class WalletController {
 
     async getHistory(req: Request, res: Response): Promise<void> {
         try {
-            const userId = req.user.sub;
-            const history = await this.walletService.getTransactionHistory(userId);
+            const walletId = parseInt(req.params.walletId);
+            const history = await this.walletService.getTransactionHistory(walletId);
             res.status(200).json(history);
         } catch (error: any) {
             res.status(500).json({ message: error.message });

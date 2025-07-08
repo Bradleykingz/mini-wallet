@@ -6,7 +6,9 @@ export class AuthRouter {
 
     private authController: AuthController;
 
-    constructor(private router: Router, private authService: AuthService) {
+    private router: Router = Router();
+
+    constructor(private authService: AuthService) {
         this.authController = new AuthController(this.authService);
         this.initializeRoutes();
     }

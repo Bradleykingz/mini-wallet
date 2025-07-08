@@ -86,7 +86,7 @@ describe('WalletService', () => {
             const result = await walletService.credit(userId, amount, description);
 
             expect(result).toEqual(updatedWallet);
-            expect(mockWalletRepository.findOrCreateWalletByUserId).toHaveBeenCalledWith(userId);
+            expect(mockWalletRepository.findWalletById).toHaveBeenCalledWith(userId);
             expect(mockWalletRepository.createTransaction).toHaveBeenCalledWith({
                 walletId: updatedWallet.id,
                 currency: updatedWallet.currency,
@@ -127,7 +127,7 @@ describe('WalletService', () => {
             const result = await walletService.debit(walletId, amount, description);
 
             expect(result).toEqual(updatedWallet);
-            expect(mockWalletRepository.findOrCreateWalletByUserId).toHaveBeenCalledWith(walletId);
+            expect(mockWalletRepository.findWalletById).toHaveBeenCalledWith(walletId);
             expect(mockWalletRepository.createTransaction).toHaveBeenCalledWith({
                 walletId: wallet.id,
                 currency: "USD",
