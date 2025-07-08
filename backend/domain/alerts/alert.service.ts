@@ -69,14 +69,19 @@ export class AlertService extends IAlertService {
         const cachedAlerts = await this.cache.get(cacheKey);
 
         if (cachedAlerts) {
-            return { alerts: JSON.parse(cachedAlerts), source: 'cache' as 'cache' | 'db' };
+            const parsed = JSON.parse(cachedAlerts);
+            parsed.forEach((alert: any) => {
+                alert.createdAt = new Date(alert.createdAt);
+            });
+            return { alerts: parsed, source: 'cache' as const };
         }
 
         const alertsFromDb = await this.alertRepo.findActiveByUser(userId);
         await this.cache.set(cacheKey, JSON.stringify(alertsFromDb), { EX: ALERTS_CACHE_TTL_SECONDS });
 
-        return { alerts: alertsFromDb, source: 'db' as 'cache' | 'db' };
+        return { alerts: alertsFromDb, source: 'db' as const };
     }
+
 
     /**
      * Marks alerts as read and clears the cache.
