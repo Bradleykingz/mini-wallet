@@ -2,6 +2,7 @@ import {IWalletRepository} from "../../domain/wallet/wallet.repository";
 import {InMemoryClient} from "../../platform/in-memory/in-memory.client";
 import {Wallet} from "../../db/schema";
 import {Promise} from "@sinclair/typebox";
+import {IAlertService} from "../alerts/alert.service";
 
 const CACHE_TTL_SECONDS = 60 * 5; // 5 minutes
 
@@ -30,7 +31,8 @@ type CachedBalance = {
 export class WalletService extends IWalletService {
     constructor(
         private readonly walletRepository: IWalletRepository,
-        private readonly inMemoryClient: InMemoryClient
+        private readonly alertService: IAlertService,
+        private readonly inMemoryClient: InMemoryClient,
     ) {
         super()
     }
@@ -110,6 +112,8 @@ export class WalletService extends IWalletService {
         // Update cache with the new balance and currency
         const dataToCache: CachedBalance = {balance: updatedWallet.balance, currency: updatedWallet.currency};
         await this.inMemoryClient.set(getBalanceCacheKey(updatedWallet.id), JSON.stringify(dataToCache), {EX: CACHE_TTL_SECONDS});
+
+        await this.alertService.checkForLowBalance(wallet.userId, parseInt(updatedWallet.balance), updatedWallet.currency);
 
         return updatedWallet;
     }

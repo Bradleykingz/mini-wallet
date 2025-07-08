@@ -1,7 +1,8 @@
 import {IAlertRepository} from './alert.repository';
 import { InMemoryClient } from '../../platform/in-memory/in-memory.client';
-import {UserRepository} from "../../domain/users/users.repository";
+import {UserRepository} from "../users/users.repository";
 import {formatCurrency} from "../../common/currency-formatter";
+import {Alert} from "../../db/schema";
 
 const ALERTS_CACHE_KEY_PREFIX = 'alerts:user:';
 const ALERTS_CACHE_TTL_SECONDS = 60 * 5; // 5 minutes
@@ -14,7 +15,7 @@ export abstract class IAlertService {
     /**
      * Gets active alerts for a user, using a cache-aside strategy.
      */
-    abstract getActiveAlerts(userId: number): Promise<{ alerts: any[]; source: 'cache' | 'db' }>;
+    abstract getActiveAlerts(userId: number): Promise<{alerts: Alert[], source: 'cache' | 'db'}>;
 
     /**
      * Marks alerts as read and clears the cache.
@@ -52,6 +53,7 @@ export class AlertService extends IAlertService {
 
             await this.alertRepo.create({
                 userId,
+                title: "low balance",
                 message,
                 level: 'warning',
             });
@@ -64,7 +66,7 @@ export class AlertService extends IAlertService {
     /**
      * Gets active alerts for a user, using a cache-aside strategy.
      */
-    public async getActiveAlerts(userId: number) {
+    public async getActiveAlerts(userId: number): Promise<{alerts: Alert[], source: 'cache' | 'db'}> {
         const cacheKey = this.getCacheKey(userId);
         const cachedAlerts = await this.cache.get(cacheKey);
 

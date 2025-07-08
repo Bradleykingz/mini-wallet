@@ -49,7 +49,7 @@ export default function TransactionForm() {
                     <div className="flex flex-col gap-6">
                         <div>
                             <Label htmlFor="type">Type</Label>
-                            <RadioGroup defaultValue="credit"
+                            <RadioGroup defaultValue="debit"
                                         onValueChange={(e) => setType(e as "credit" | "debit")}
                                         className="flex space-x-4 mt-2">
                                 <div className="flex items-center space-x-2">

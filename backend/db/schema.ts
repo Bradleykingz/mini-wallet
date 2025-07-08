@@ -18,6 +18,7 @@ export const alerts = pgTable('alerts', {
     userId: integer('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
     level: alertLevelEnum('level').default('warning').notNull(),
     message: text('message').notNull(),
+    title: text('title').notNull().default("low balance alert"),
     isRead: boolean('is_read').default(false).notNull(),
     createdAt: timestamp('created_at').defaultNow().notNull(),
 });

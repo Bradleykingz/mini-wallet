@@ -51,15 +51,17 @@ const port = parseInt(process.env.PORT || "2499", 10);
     const authRouter = new AuthRouter(authController);
     server.use('/api/auth', authRouter.getRouter());
 
-    const walletRepository = new WalletRepository(db);
-    const walletService = new WalletService(walletRepository, redisClient);
-    const walletController = new WalletController(walletService);
-    const walletRouter = new WalletRouter(walletController);
-    server.use("/api/wallet", walletRouter.getRouter());
 
     const usersRepository = new UserRepository();
     const alertRepository = new AlertRepository();
     const alertService = new AlertService(alertRepository, usersRepository, redisClient);
+
+    const walletRepository = new WalletRepository(db);
+    const walletService = new WalletService(walletRepository, alertService, redisClient);
+    const walletController = new WalletController(walletService);
+    const walletRouter = new WalletRouter(walletController);
+    server.use("/api/wallet", walletRouter.getRouter());
+
     const transactionsRepository = new TransactionsRepository();
     const paymentProvider = new MockPaymentProvider();
 

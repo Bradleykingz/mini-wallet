@@ -39,10 +39,8 @@ class APIClient {
     }
 
     fetcher(url: string) {
-        console.log("axios GET", url, this.getAuthHeaders());
         return this.client.get(url)
             .then(res => {
-                console.log("Response:", res.data);
                 return res.data;
             })
             .catch(err => {
@@ -53,6 +51,10 @@ class APIClient {
 
     login(email: string, password: string) {
         return this.client.post("/auth/login/", {email, password}).then(res => res.data);
+    }
+
+    markRead(alertIds: number[]) {
+        return this.client.post("/alerts/read/", {alertIds}).then(res => res.data);
     }
 
     transact(amount: number, type: "credit" | "debit", description?: string) {

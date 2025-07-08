@@ -1,0 +1,1 @@
+ALTER TABLE "alerts" ADD COLUMN "title" text DEFAULT 'low balance alert' NOT NULL;
