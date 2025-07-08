@@ -60,6 +60,10 @@ class APIClient {
     transact(amount: number, type: "credit" | "debit", description?: string) {
         return this.client.post("/wallet/transact/", {amount, type, description}).then(res => res.data);
     }
+
+    register(email: string, password: string) {
+        return this.client.post("/auth/register/", {email, password}).then(res => res.data);
+    }
 }
 
 export const getApi = (): APIClient => {

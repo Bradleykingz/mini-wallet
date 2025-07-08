@@ -7,6 +7,8 @@ import {RadioGroup, RadioGroupItem} from "../../src/components/ui/radio-group";
 import {Label} from "../../src/components/ui/label";
 import {getApi} from "../../src/lib/api";
 import {toast} from "sonner";
+import {Wallet} from "../../../backend/db/schema";
+import {mutate} from "swr";
 
 export default function TransactionForm() {
     const [type, setType] = useState<"credit" | "debit">("debit");
@@ -21,7 +23,10 @@ export default function TransactionForm() {
             const amount = parseFloat(form.amount.value);
             const description = form.description.value;
 
-            await getApi().transact(amount, type, description || undefined);
+            const updatedWallet: Wallet = await getApi().transact(amount, type, description || undefined);
+
+            await mutate("/wallet/balance", updatedWallet, false); // Optimistically update the balance
+            await mutate("/alerts"); // Refresh alerts
 
             toast.info("Transaction successful!", {
                 position: "top-right",
@@ -42,7 +47,7 @@ export default function TransactionForm() {
         <Card>
             <CardHeader>
                 <h2 className="text-xl font-bold">Transaction form</h2>
-                <CardDescription>Create a new transaction</CardDescription>
+                <CardDescription>Deposit money to your account, or send money</CardDescription>
             </CardHeader>
             <CardContent>
                 <form className="space-y-4" onSubmit={handleSubmit}>

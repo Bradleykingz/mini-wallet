@@ -12,7 +12,7 @@ import {getApi} from "../lib/api";
 import {toast} from "sonner"
 import {useRouter} from "next/navigation";
 
-export function AuthForm({className, ...props}: React.ComponentProps<"div">) {
+export function RegistrationForm({className, ...props}: React.ComponentProps<"div">) {
 
     const router = useRouter()
 
@@ -22,8 +22,8 @@ export function AuthForm({className, ...props}: React.ComponentProps<"div">) {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
         try {
-            const tokens = await getApi().login(email, password)
-            toast.success("Login successful!", {
+            const tokens = await getApi().register(email, password)
+            toast.success("Registration successful!", {
                 position: "top-right",
             })
 
@@ -31,7 +31,7 @@ export function AuthForm({className, ...props}: React.ComponentProps<"div">) {
 
             router.push("/dashboard")
         } catch (e) {
-            toast.error("Login failed. Please check your email and password.", {
+            toast.error("Registration failed. Please check your email and password.", {
                 position: "top-right",
             })
         }
@@ -41,9 +41,9 @@ export function AuthForm({className, ...props}: React.ComponentProps<"div">) {
         <div className={cn("flex flex-col gap-6", className)} {...props}>
             <Card>
                 <CardHeader>
-                    <CardTitle>Login to your account</CardTitle>
+                    <CardTitle>Create a new account</CardTitle>
                     <CardDescription>
-                        Enter your email below to login to your account
+                        Enter an email and password you will use to login
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -56,7 +56,7 @@ export function AuthForm({className, ...props}: React.ComponentProps<"div">) {
                                     type="email"
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
-                                    placeholder="m@example.com"
+                                    placeholder="wallace@example.com"
                                     required
                                 />
                             </div>
@@ -73,11 +73,8 @@ export function AuthForm({className, ...props}: React.ComponentProps<"div">) {
                             </div>
                             <div className="flex flex-col gap-3">
                                 <Button type="submit" className="w-full cursor-pointer">
-                                    Login
+                                    Register
                                 </Button>
-                                <a href={"/register"} className="hover:underline">
-                                    Don't have an account? Register here
-                                </a>
                             </div>
                         </div>
                     </form>

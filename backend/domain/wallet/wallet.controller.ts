@@ -37,7 +37,7 @@ export class WalletController {
                 return;
             }
 
-            res.status(200).json({ message: `${type.charAt(0).toUpperCase() + type.slice(1)} successful`, wallet: updatedWallet });
+            res.status(200).json({ ...updatedWallet });
         } catch (e) {
             console.error(e);
             res.status(500).json({ message: e });
