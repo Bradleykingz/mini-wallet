@@ -57,8 +57,11 @@ class APIClient {
         return this.client.post("/alerts/read/", {alertIds}).then(res => res.data);
     }
 
-    transact(amount: number, type: "credit" | "debit", description?: string) {
-        return this.client.post("/wallet/transact/", {amount, type, description}).then(res => res.data);
+    transact(amount: number, type: "credit" | "debit", description?: string, simulate?: boolean) {
+        if (simulate){
+            return this.client.post("/mock-provider/transact", {amount, type}).then(res => res.data);
+        }
+        return this.client.post("/wallet/transact/", {amount, type, description, simulate}).then(res => res.data);
     }
 
     register(email: string, password: string) {

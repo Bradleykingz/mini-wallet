@@ -37,7 +37,7 @@ describe('AlertController', () => {
         }));
 
         mockRequest = {
-            agent: {sub: agentId}, // Assuming agent ID is from a JWT payload or middleware
+            agent: {id: agentId}, // Assuming agent ID is from a JWT payload or middleware
             body: {},
         };
 

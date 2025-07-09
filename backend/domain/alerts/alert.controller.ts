@@ -10,7 +10,6 @@ export class AlertController {
             const result = await this.alertService.getActiveAlerts(agentId);
             res.status(200).json(result);
         } catch (error: any) {
-            console.error(error);
             res.status(500).json({ message: 'Failed to retrieve alerts.' });
         }
     }

@@ -82,6 +82,7 @@ describe('AlertService', () => {
             const expectedMessage = `Account balance is low: $49.99 [USD]. Threshold is $100.00 [USD].`;
             expect(mockAlertRepo.create).toHaveBeenCalledWith({
                 agentId,
+                title: "low balance",
                 message: expectedMessage,
                 level: 'warning',
             });

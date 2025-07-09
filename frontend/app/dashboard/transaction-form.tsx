@@ -9,10 +9,13 @@ import {getApi} from "../../src/lib/api";
 import {toast} from "sonner";
 import {Wallet} from "../../../backend/db/schema";
 import {mutate} from "swr";
+import {Button} from "../../src/components/ui/button";
+import {Switch} from "../../src/components/ui/switch";
 
 export default function TransactionForm() {
     const [type, setType] = useState<"credit" | "debit">("debit");
     const [loading, setLoading] = useState(false);
+    const [simulate, setSimulate] = useState(false);
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -23,7 +26,7 @@ export default function TransactionForm() {
             const amount = parseFloat(form.amount.value);
             const description = form.description.value;
 
-            const updatedWallet: Wallet = await getApi().transact(amount, type, description || undefined);
+            const updatedWallet: Wallet = await getApi().transact(amount, type, description || undefined, simulate);
 
             await mutate("/wallet/balance", updatedWallet, false); // Optimistically update the balance
             await mutate("/alerts"); // Refresh alerts
@@ -33,7 +36,6 @@ export default function TransactionForm() {
             })
             form.reset();
         } catch (error) {
-            console.error(error);
             toast.error("could not perform transaction", {
                 position: "top-right",
             })
@@ -69,6 +71,27 @@ export default function TransactionForm() {
                         </div>
 
                         <div>
+                            <Label htmlFor="simulate">Simulate Third-party Processor</Label>
+                            <Switch id={"simulate"}
+                                    className={"cursor-pointer"}
+                                    checked={simulate}
+                                    onCheckedChange={(e)=> setSimulate(e)}
+                            />
+                        </div>
+
+                        <div>
+                            <Label htmlFor="recipient">Recipient</Label>
+                            <Input
+                                type="text"
+                                id="recipient"
+                                name="recipient"
+                                required
+                                placeholder="Enter recipient's email or username"
+                                className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
+                            />
+                        </div>
+
+                        <div>
                             <Label htmlFor="amount">Amount</Label>
                             <Input
                                 type="number"
@@ -92,13 +115,13 @@ export default function TransactionForm() {
                         </div>
                     </div>
 
-                    <button
+                    <Button
                         type="submit"
                         disabled={loading}
-                        className="w-full bg-blue-600 cursor-pointer text-white py-2 px-4 rounded-md hover:bg-blue-700 disabled:opacity-50"
+                        className="w-full cursor-pointer text-white py-2 px-4 rounded-md disabled:opacity-50"
                     >
                         {loading ? "Submitting..." : "Submit Transaction"}
-                    </button>
+                    </Button>
                 </form>
             </CardContent>
         </Card>

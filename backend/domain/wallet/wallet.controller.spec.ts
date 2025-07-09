@@ -109,8 +109,7 @@ describe('WalletController', () => {
             expect(mockWalletService.credit).toHaveBeenCalledWith(22, 100, 'Deposit');
             expect(res.status).toHaveBeenCalledWith(200);
             expect(res.json).toHaveBeenCalledWith({
-                message: 'Credit successful',
-                wallet: updatedWallet
+                ...updatedWallet
             });
         });
 
@@ -137,8 +136,7 @@ describe('WalletController', () => {
             expect(mockWalletService.debit).toHaveBeenCalledWith(44, 50, 'Withdraw');
             expect(res.status).toHaveBeenCalledWith(200);
             expect(res.json).toHaveBeenCalledWith({
-                message: 'Debit successful',
-                wallet: updatedWallet
+                ...updatedWallet
             });
         });
 

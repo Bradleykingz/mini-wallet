@@ -75,7 +75,7 @@ const port = parseInt(process.env.PORT || "2499", 10);
 
     const transactionsController = new TransactionsController(transactionsService);
     const transactionsRouter = new TransactionsRouter(transactionsController);
-    server.use("/api/transactions", transactionsRouter.getRouter());
+    server.use("/api/mock-provider", transactionsRouter.getRouter());
 
     const alertController = new AlertController(alertService);
     const alertsRouter = new AlertRouter(alertController);

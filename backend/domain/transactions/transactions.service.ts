@@ -79,7 +79,6 @@ export class TransactionService extends ITransactionService {
         } catch (error) {
             const err = error instanceof Error ? error : new Error('Unknown error occurred');
             // If the provider fails, we don't touch our DB or cache.
-            console.error(`[TransactionService] Cash-in failed for agent ${walletId}:`, error);
             throw new Error(`Payment provider failed: ${err.message}`);
         }
     }
@@ -119,7 +118,6 @@ export class TransactionService extends ITransactionService {
         } catch (error) {
             const err = error instanceof Error ? error : new Error('Unknown error occurred');
             // 5. On provider failure, we must REFUND the agent.
-            console.error(`[TransactionService] Cash-out failed for agent ${agentId}, initiating refund:`, error);
 
             // Create a compensating transaction (credit) to refund the agent
             await this.transactionRepo.createAndUpdateBalance({

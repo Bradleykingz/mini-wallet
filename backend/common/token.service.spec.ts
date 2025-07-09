@@ -83,7 +83,7 @@ describe('TokenService', () => {
     describe('generateToken', () => {
         it('should call jwt.sign with the correct arguments', () => {
             const jti = 'test-jti-123';
-            const payload = { sub: 1, role: 'agent' };
+            const payload = { id: 1, role: 'agent' };
             const expectedSignedToken = 'signed.jwt.token';
 
             (mockJwt.sign as jest.Mock).mockReturnValue(expectedSignedToken);

@@ -59,7 +59,6 @@ export default function AlertBanner() {
         try {
             await getApi().markRead([alertId])
         } catch (error) {
-            console.error("Error marking alert as read:", error);
             toast.error(error.message);
         }
     }

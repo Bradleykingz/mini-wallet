@@ -39,7 +39,6 @@ export class WalletController {
 
             res.status(200).json({ ...updatedWallet });
         } catch (e) {
-            console.error(e);
             res.status(500).json({ message: e });
         }
     }

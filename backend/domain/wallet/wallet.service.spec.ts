@@ -1,6 +1,7 @@
 import {IWalletService, WalletService} from './wallet.service';
 import {IWalletRepository} from './wallet.repository';
 import {InMemoryClient} from '../../platform/in-memory/in-memory.client';
+import {IAlertService} from "../alerts/alert.service";
 
 // Mock the dependencies
 const mockWalletRepository: jest.Mocked<IWalletRepository> = {
@@ -16,13 +17,20 @@ const mockInMemoryClient: jest.Mocked<InMemoryClient> = {
     del: jest.fn(),
 };
 
+const mockAlertService: jest.Mocked<IAlertService> = {
+    getActiveAlerts: jest.fn(),
+    getCacheKey: jest.fn(),
+    checkForLowBalance: jest.fn(),
+    markAlertsAsRead: jest.fn(),
+}
+
 describe('WalletService', () => {
     let walletService: IWalletService;
 
     beforeEach(() => {
         // Reset mocks before each test
         jest.clearAllMocks();
-        walletService = new WalletService(mockWalletRepository, mockInMemoryClient);
+        walletService = new WalletService(mockWalletRepository, mockAlertService, mockInMemoryClient);
     });
 
     describe('getBalance', () => {

@@ -5,10 +5,10 @@ import {TransactionsController} from "./transactions.controller";
 jest.mock('./transactions.service');
 const MockedTransactionService = TransactionService as jest.MockedClass<typeof TransactionService>;
 
-describe('TransactionController', () => {
+describe('TransactionsController', () => {
     let controller: TransactionsController;
     let mockTransactionService: jest.Mocked<TransactionService>;
-    let mockRequest: Partial<Request>;
+    let mockRequest: Partial<Request> & { agent?: any };
     let mockResponse: Partial<Response>;
     let responseJson: jest.Mock;
     let responseStatus: jest.Mock;
@@ -20,10 +20,10 @@ describe('TransactionController', () => {
         controller = new TransactionsController(mockTransactionService);
 
         responseJson = jest.fn();
-        responseStatus = jest.fn().mockReturnValue({json: responseJson});
+        responseStatus = jest.fn().mockReturnValue({ json: responseJson });
 
         mockRequest = {
-            agent: {sub: agentId},
+            agent: { id: agentId },
             body: {},
             params: {},
         };
