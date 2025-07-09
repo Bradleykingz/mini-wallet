@@ -26,11 +26,15 @@ services:
       POSTGRES_DB: ${POSTGRES_DB:-mini_wallet}
     volumes:
       - db_data:/var/lib/postgresql/data
+    networks:
+      - mini-wallet-network
 
   redis:
     image: redis:7
     volumes:
       - redis_data:/data
+    networks:
+      - mini-wallet-network
 
 networks:
   mini-wallet-network:
