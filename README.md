@@ -41,6 +41,33 @@ REDIS_URL=redis://localhost:6379
 JWT_SECRET=<your_jwt_secret>
 ```
 
+## Project Structure
+
+The project is built on a monorepo structure, with the backend following domain-driven design principles, which is
+further layered into controller, service, and repository layers. The frontend is a React application.
+
+```
+.
+├── backend
+|         ├── common  // shared utilities and types
+|         ├── db     // database connection and migrations
+|         ├── dist
+|         ├── domain // user-facing features
+|         ├── http   // http test files
+|         ├── platform // platform-specific code
+├── docker
+|         ├── docker-compose.yml
+|         └── Dockerfile
+├── frontend
+|         ├── app // Next.js app directory
+|         ├── components // shared React components
+|         ├── hooks
+|         ├── lib  // shared libraries
+|         ├── public
+└── README.md
+
+```
+
 Run the frontend
 
 ```bash
