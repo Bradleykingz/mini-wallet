@@ -197,4 +197,52 @@ describe('Auth Integration (Controller + Service)', () => {
             expect(mockAuthRepository.findByEmail).not.toHaveBeenCalled();
         });
     });
+
+    // === Test the 'logout' flow ===
+    describe('POST /logout', () => {
+        it('should successfully log out by clearing the JTI', async () => {
+            // Arrange
+            // @ts-ignore
+            req = { jti: 'mock-jti-to-clear' }; // JTI attached by auth middleware
+            mockTokenService.clearJti.mockResolvedValue(undefined);
+
+            // Act
+            await authController.logout(req as Request, res);
+
+            // Assert
+            // 1. Verify service logic
+            expect(mockTokenService.clearJti).toHaveBeenCalledWith('mock-jti-to-clear');
+
+            // 2. Verify controller response
+            expect(res.status).toHaveBeenCalledWith(200);
+            expect(res.json).toHaveBeenCalledWith({ message: 'Logout successful' });
+        });
+
+        it('should return 500 if clearing the JTI fails', async () => {
+            // Arrange
+            // @ts-ignore
+            req = { jti: 'mock-jti-to-clear' };
+            mockTokenService.clearJti.mockRejectedValue(new Error('Redis connection failed'));
+
+            // Act
+            await authController.logout(req as Request, res);
+
+            // Assert
+            expect(res.status).toHaveBeenCalledWith(500);
+            expect(res.json).toHaveBeenCalledWith({ message: 'An error occurred during logout' });
+        });
+
+        it('should return 400 if JTI is missing from the request', async () => {
+            // Arrange
+            req = {}; // No jti property
+
+            // Act
+            await authController.logout(req as Request, res);
+
+            // Assert
+            expect(res.status).toHaveBeenCalledWith(400);
+            expect(res.json).toHaveBeenCalledWith({ message: 'Token not provided or invalid' });
+            expect(mockTokenService.clearJti).not.toHaveBeenCalled();
+        });
+    });
 });

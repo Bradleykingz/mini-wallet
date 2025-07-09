@@ -5,10 +5,12 @@ import TransactionForm from "./transaction-form";
 import AlertBanner from "./alert-banner";
 import AuthGuard from "../../components/auth-guard";
 import {Button} from "../../components/ui/button";
+import {getApi} from "../../lib/api";
 
 export default function Dashboard() {
 
     async function logout() {
+        await getApi().logout()
         localStorage.removeItem("tokens");
         window.location.href = "/login";
     }
