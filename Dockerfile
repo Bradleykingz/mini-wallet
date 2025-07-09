@@ -24,8 +24,4 @@ RUN npm prune --production
 
 EXPOSE 2450
 
-CMD ["dockerize",
-     "-wait", "tcp://redis:6379",
-     "-wait", "tcp://db:5432",
-     "-timeout", "30s",
-     "node", "backend/dist/server.js"]
+CMD ["dockerize", "-wait", "tcp://redis:6379", "-wait", "tcp://db:5432", "-timeout", "30s", "node", "backend/dist/server.js"]
