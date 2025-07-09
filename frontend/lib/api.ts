@@ -53,6 +53,10 @@ class APIClient {
         return this.client.post("/auth/login/", {email, password}).then(res => res.data);
     }
 
+    logout() {
+        return this.client.post("/auth/logout/").then(res => res.data);
+    }
+
     markRead(alertIds: number[]) {
         return this.client.post("/alerts/read/", {alertIds}).then(res => res.data);
     }

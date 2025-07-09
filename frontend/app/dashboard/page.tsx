@@ -8,6 +8,11 @@ import {Button} from "../../components/ui/button";
 
 export default function Dashboard() {
 
+    async function logout() {
+        localStorage.removeItem("tokens");
+        window.location.href = "/login";
+    }
+
     return (
         <>
             <AuthGuard>
@@ -17,10 +22,21 @@ export default function Dashboard() {
                         <AlertBanner/>
                     </div>
                     <div className={"mb-8"}>
-                        <Button variant={"default"} className={"mb-4"} asChild>
-                            <a href={"/history"}>View all transactions</a>
-                        </Button>
-                        <BalanceCard />
+                        <div className={"flex justify-between"}>
+
+                            <Button variant={"default"} className={"mb-4"} asChild>
+                                <a href={"/history"}>View all transactions</a>
+                            </Button>
+
+                            <Button variant={"default"}
+                                    className={"mb-4"}
+                                    asChild
+                                    onClick={logout}
+                            >
+                                <a href={"#"}>Logout</a>
+                            </Button>
+                        </div>
+                        <BalanceCard/>
                     </div>
                     <div>
                         <TransactionForm/>
