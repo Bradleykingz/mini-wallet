@@ -40,6 +40,14 @@ export class WalletController {
 
             res.status(200).json({ ...updatedWallet });
         } catch (e) {
+            if (e instanceof Error) {
+                if (e.message.includes('Insufficient funds')) {
+                    res.status(400).json({ message: e.message });
+                    return;
+                }
+                res.status(500).json({ message: e.message });
+                return;
+            }
             console.error("500 error in wallet.controller.ts transact", e);
             res.status(500).json({ message: e });
         }
