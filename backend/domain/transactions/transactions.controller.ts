@@ -1,8 +1,9 @@
 import { Request, Response } from 'express';
 import {TransactionService} from "./transactions.service";
+import {IWalletService} from "../wallet/wallet.service";
 
 export class TransactionsController {
-    constructor(private transactionService: TransactionService) {}
+    constructor(private transactionService: TransactionService, private walletRepository: IWalletService) {}
 
     async getReceipt(req: Request, res: Response): Promise<void> {
         try {
@@ -17,6 +18,7 @@ export class TransactionsController {
     async transact(req: Request, res: Response): Promise<void> {
         try {
             const agentId = req.agent.id;
+
             const { amount, type } = req.body; // type: 'cashIn' | 'cashOut'
 
             if (typeof amount !== 'number' || amount <= 0) {
@@ -29,13 +31,15 @@ export class TransactionsController {
                 return;
             }
 
-            let transaction;
+            const wallet = await this.walletRepository.findOrCreateWalletByAgentId(agentId);
+
+            let result;
             if (type === 'cash_in') {
-                transaction = await this.transactionService.cashIn(agentId, amount);
-                res.status(201).json({ message: 'Cash-in successful.', receipt: transaction });
+                result = await this.transactionService.cashIn(wallet.id, amount);
+                res.status(201).json({ ...result });
             } else {
-                transaction = await this.transactionService.cashOut(agentId, amount);
-                res.status(200).json({ message: 'Cash-out initiated successfully.', receipt: transaction });
+                result = await this.transactionService.cashOut(wallet.id, amount);
+                res.status(200).json({ ...result });
             }
         } catch (error: any) {
             res.status(400).json({ message: error.message });

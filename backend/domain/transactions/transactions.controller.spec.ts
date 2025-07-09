@@ -1,13 +1,23 @@
 import {Request, Response} from 'express';
 import {TransactionService} from './transactions.service';
 import {TransactionsController} from "./transactions.controller";
+import {IWalletService} from "../wallet/wallet.service";
 
 jest.mock('./transactions.service');
 const MockedTransactionService = TransactionService as jest.MockedClass<typeof TransactionService>;
 
+class MockedWalletService implements IWalletService {
+    findOrCreateWalletByAgentId = jest.fn();
+    getTransactionHistory = jest.fn();
+    credit = jest.fn();
+    debit = jest.fn();
+    getBalance = jest.fn();
+}
+
 describe('TransactionsController', () => {
     let controller: TransactionsController;
     let mockTransactionService: jest.Mocked<TransactionService>;
+    let mockWalletService: jest.Mocked<IWalletService>;
     let mockRequest: Partial<Request> & { agent?: any };
     let mockResponse: Partial<Response>;
     let responseJson: jest.Mock;
@@ -16,14 +26,15 @@ describe('TransactionsController', () => {
     const agentId = 456;
 
     beforeEach(() => {
+        mockWalletService = new MockedWalletService() as jest.Mocked<IWalletService>;
         mockTransactionService = new MockedTransactionService({} as any, {} as any, {} as any, {} as any, {} as any) as jest.Mocked<TransactionService>;
-        controller = new TransactionsController(mockTransactionService);
+        controller = new TransactionsController(mockTransactionService, mockWalletService);
 
         responseJson = jest.fn();
-        responseStatus = jest.fn().mockReturnValue({ json: responseJson });
+        responseStatus = jest.fn().mockReturnValue({json: responseJson});
 
         mockRequest = {
-            agent: { id: agentId },
+            agent: {id: agentId},
             body: {},
             params: {},
         };
@@ -132,16 +143,38 @@ describe('TransactionsController', () => {
         it('should return 200 on successful cash-out initiation', async () => {
             mockRequest.body = {amount: 50, type: "cash_out"};
             const transactionResult = {
-                id: 1,
-                referenceId: "1224",
-                createdAt: new Date(),
-                currency: "USD" as const,
-                walletId: 1,
-                type: "cash_out" as const,
-                status: "completed" as const,
-                amount: "100",
-                description: "Cash-out of 100 USD",
-                externalProviderId: "12344",
+                newTransaction: {
+                    id: 1,
+                    referenceId: "1224",
+                    createdAt: new Date(),
+                    currency: "USD" as const,
+                    walletId: 1,
+                    type: "cash_out" as const,
+                    status: "completed" as const,
+                    amount: "100",
+                    description: "Cash-out of 100 USD",
+                    externalProviderId: "12344",
+                },
+                updatedWallet: {
+                    id: 1,
+                    createdAt: new Date(),
+                    agentId: 1,
+                    balance: "100",
+                    currency: "USD" as const,
+                    updatedAt: new Date()
+                },
+                receipt: {
+                    id: 1,
+                    createdAt: new Date(),
+                    currency: "USD" as const,
+                    referenceId: "1234",
+                    walletId: 1,
+                    type: "cash_out" as const,
+                    status: "completed" as const,
+                    amount: "100",
+                    description: "Cash-out of 100 USD",
+                    externalProviderId: "12344"
+                }
             };
             mockTransactionService.cashOut.mockResolvedValue(transactionResult);
 
