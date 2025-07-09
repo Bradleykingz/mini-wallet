@@ -74,7 +74,7 @@ export const getApi = (): APIClient => {
         throw new Error("APIClient can only be used in the browser");
     }
 
-    return new APIClient(process.env.NEXT_PUBLIC_API_URL || "http://localhost:2499/api");
+    return new APIClient(process.env.NEXT_PUBLIC_API_URL || "http://localhost:2450/api");
 };
 
 export const fetcher = async (url: string) => {
