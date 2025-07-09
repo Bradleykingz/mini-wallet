@@ -4,7 +4,10 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm install --omit=dev
 
-COPY .. .
+COPY . .
 
-EXPOSE 3000
-CMD ["npm", "start"]
+RUN npm run build:server
+
+EXPOSE 2450
+
+CMD ["node", "backend/dist/server.js"]

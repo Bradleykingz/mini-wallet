@@ -1,17 +1,16 @@
 version: '3.8'
 services:
   app:
+    env_file:
+      - .env
     build:
       context: ..
       dockerfile: Dockerfile
     ports:
-      - "3000:3000"
+      - "2499:2499"
     environment:
       - NODE_ENV=production
-      - DATABASE_URL=postgres://user:password@db:5432/mini_wallet
-      - REDIS_URL=redis://redis:6379
-      - JWT_SECRET=your_jwt_secret
-      - PORT=3000
+      - PORT=2450
     depends_on:
       - db
       - redis
@@ -21,11 +20,13 @@ services:
       - mini-wallet-network
 
   db:
+    env_file:
+      - .env
     image: postgres:17
     environment:
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: mini_wallet
+      POSTGRES_USER: ${POSTGRES_USER:-user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
+      POSTGRES_DB: ${POSTGRES_DB:-mini_wallet}
     volumes:
       - db_data:/var/lib/postgresql/data
 
@@ -33,8 +34,10 @@ services:
     image: redis:7
     volumes:
       - redis_data:/data
-    ports:
-      - "6379:6379"
+
+networks:
+  mini-wallet-network:
+
 volumes:
   db_data:
   redis_data:
