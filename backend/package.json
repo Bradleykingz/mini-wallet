@@ -6,7 +6,8 @@
     "dev": "ts-node -P tsconfig.json server.ts",
     "test": "jest backend",
     "build": "tsc -p tsconfig.json",
-    "start": "node dist/server.js"
+    "start": "node dist/server.js",
+    "migrate": "drizzle-kit push"
   },
   "dependencies": {
     "bcrypt": "^6.0.0",
