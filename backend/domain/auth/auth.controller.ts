@@ -14,6 +14,7 @@ export class AuthController {
             const agent = await this.authService.register({ email, password });
             res.status(201).json({ message: 'Registration successful', agent });
         } catch (error: any) {
+            console.error("error while registering user", error);
             res.status(400).json({ message: error.message });
         }
     }
@@ -28,6 +29,7 @@ export class AuthController {
             const result = await this.authService.login({ email, password });
             res.status(200).json(result);
         } catch (error: any) {
+            console.error("error while processing login", error);
             res.status(401).json({ message: error.message });
         }
     }
@@ -43,6 +45,7 @@ export class AuthController {
             await this.authService.logout(jti);
             res.status(200).json({ message: 'Logout successful' });
         } catch (error: any) {
+            console.error("error while processing logout", error);
             res.status(500).json({ message: 'An error occurred during logout' });
         }
     }

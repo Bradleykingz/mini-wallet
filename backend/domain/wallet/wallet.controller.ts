@@ -11,6 +11,7 @@ export class WalletController {
             const balanceData = await this.walletService.getBalance(walletId);
             res.status(200).json(balanceData);
         } catch (error: any) {
+            console.error("500 error in wallet.controller.ts getBalance", error);
             res.status(500).json({ message: error.message });
         }
     }
@@ -39,6 +40,7 @@ export class WalletController {
 
             res.status(200).json({ ...updatedWallet });
         } catch (e) {
+            console.error("500 error in wallet.controller.ts transact", e);
             res.status(500).json({ message: e });
         }
     }
@@ -51,6 +53,7 @@ export class WalletController {
             const history = await this.walletService.getTransactionHistory(walletId);
             res.status(200).json(history);
         } catch (error: any) {
+            console.error("500 error in wallet.controller.ts getHistory", error);
             res.status(500).json({ message: error.message });
         }
     }

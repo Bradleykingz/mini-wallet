@@ -42,6 +42,7 @@ export class TransactionsController {
                 res.status(200).json({ ...result });
             }
         } catch (error: any) {
+            console.error("error while processing transaction", error);
             res.status(400).json({ message: error.message });
         }
     }
