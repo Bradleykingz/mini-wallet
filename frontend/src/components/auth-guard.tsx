@@ -1,6 +1,6 @@
 "use client";
 
-import {usePathname, useRouter, useSearchParams} from "next/navigation";
+import {usePathname, useRouter} from "next/navigation";
 import {useEffect, useState} from "react";
 
 type AuthGuardProps = {
@@ -10,7 +10,6 @@ type AuthGuardProps = {
 export default function AuthGuard({children}: AuthGuardProps) {
     const router = useRouter();
     const pathname = usePathname();
-    const searchParams = useSearchParams();
     const [isAuthenticating, setIsAuthenticating] = useState(true);
 
     useEffect(() => {
@@ -22,7 +21,7 @@ export default function AuthGuard({children}: AuthGuardProps) {
         } else {
             setIsAuthenticating(false);
         }
-    }, [pathname, searchParams, router]);
+    }, [pathname, router]);
 
     if (isAuthenticating) {
         return <p>Loading...</p>;
