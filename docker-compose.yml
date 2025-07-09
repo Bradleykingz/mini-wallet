@@ -1,4 +1,3 @@
-version: '3.8'
 services:
   app:
     env_file:
@@ -21,7 +20,7 @@ services:
 
   db:
     env_file:
-      - ../.env
+      - .env
     image: postgres:17
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-user}
