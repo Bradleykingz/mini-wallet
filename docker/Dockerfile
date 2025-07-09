@@ -19,5 +19,5 @@ RUN tar -C /usr/local/bin -xzvf /tmp/dockerize.tar.gz && \
 
 EXPOSE 2450
 
-RUN chmod +x /entrypoint.sh
-ENTRYPOINT ["/entrypoint.sh"]
+RUN chmod +x entrypoint.sh
+ENTRYPOINT ["entrypoint.sh"]
