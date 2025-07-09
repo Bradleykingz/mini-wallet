@@ -9,7 +9,6 @@ type AuthGuardProps = {
 
 export default function AuthGuard({children}: AuthGuardProps) {
     const router = useRouter();
-    const pathname = usePathname();
     const [isAuthenticating, setIsAuthenticating] = useState(true);
 
     useEffect(() => {
@@ -21,7 +20,7 @@ export default function AuthGuard({children}: AuthGuardProps) {
         } else {
             setIsAuthenticating(false);
         }
-    }, [pathname, router]);
+    }, [router]);
 
     if (isAuthenticating) {
         return <p>Loading...</p>;
