@@ -1,17 +1,21 @@
 FROM node:18
 
-WORKDIR /app/backend
+WORKDIR /app
 
-COPY backend ./
-COPY backend/.env .env
+# Copy backend code
+COPY ../backend ./backend
+COPY ../backend/.env ./backend/.env
+
+WORKDIR /app/backend
 
 RUN npm install && \
     npm run build:server && \
     npm prune --production
 
-COPY https://github.com/jwilder/dockerize/releases/download/v0.6.1/dockerize-linux-amd64-v0.6.1.tar.gz /tmp/
-RUN tar -C /usr/local/bin -xzvf /tmp/dockerize-linux-amd64-v0.6.1.tar.gz && \
-    rm /tmp/dockerize-linux-amd64-v0.6.1.tar.gz
+# Install dockerize
+ADD https://github.com/jwilder/dockerize/releases/download/v0.6.1/dockerize-linux-amd64-v0.6.1.tar.gz /tmp/dockerize.tar.gz
+RUN tar -C /usr/local/bin -xzvf /tmp/dockerize.tar.gz && \
+    rm /tmp/dockerize.tar.gz
 
 EXPOSE 2450
 
