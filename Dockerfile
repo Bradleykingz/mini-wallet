@@ -1,13 +1,11 @@
 FROM node:18
 
-WORKDIR /app
-COPY package*.json ./
+WORKDIR /app/backend
+
+COPY backend/package*.json ./
 RUN npm install
 
-COPY backend ./backend
-COPY Dockerfile .
-COPY docker-compose.yml .
-COPY tsconfig.json .
+COPY backend/. ./
 
 RUN npm run build:server
 
