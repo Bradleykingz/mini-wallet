@@ -8,7 +8,7 @@ COPY .. .
 
 RUN npm run build:server
 
-npm prune --production
+RUN npm prune --production
 
 EXPOSE 2450
 
