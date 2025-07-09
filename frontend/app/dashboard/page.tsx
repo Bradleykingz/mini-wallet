@@ -3,8 +3,8 @@
 import BalanceCard from "./balance-card";
 import TransactionForm from "./transaction-form";
 import AlertBanner from "./alert-banner";
-import AuthGuard from "../../src/components/auth-guard";
-import {Button} from "../../src/components/ui/button";
+import AuthGuard from "../../components/auth-guard";
+import {Button} from "../../components/ui/button";
 
 export default function Dashboard() {
 

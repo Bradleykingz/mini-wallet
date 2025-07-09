@@ -1,15 +1,15 @@
 "use client";
 
-import {Input} from "../../src/components/ui/input";
-import {Card, CardContent, CardDescription, CardHeader} from "../../src/components/ui/card";
+import {Input} from "../../components/ui/input";
+import {Card, CardContent, CardDescription, CardHeader} from "../../components/ui/card";
 import {useState} from "react";
-import {RadioGroup, RadioGroupItem} from "../../src/components/ui/radio-group";
-import {Label} from "../../src/components/ui/label";
-import {getApi} from "../../src/lib/api";
+import {RadioGroup, RadioGroupItem} from "../../components/ui/radio-group";
+import {Label} from "../../components/ui/label";
+import {getApi} from "../../lib/api";
 import {toast} from "sonner";
 import {mutate} from "swr";
-import {Button} from "../../src/components/ui/button";
-import {Switch} from "../../src/components/ui/switch";
+import {Button} from "../../components/ui/button";
+import {Switch} from "../../components/ui/switch";
 import {Wallet} from "../../types";
 
 export default function TransactionForm() {

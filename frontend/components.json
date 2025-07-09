@@ -11,10 +11,10 @@
     "prefix": ""
   },
   "aliases": {
-    "components": "@frontend/src/components",
+    "components": "src/components",
     "ui": "src/components/ui",
     "lib": "src/lib",
-    "utils": "../../lib/utils",
+    "utils": "src/lib/utils",
     "hooks": "hooks"
   },
   "iconLibrary": "lucide"

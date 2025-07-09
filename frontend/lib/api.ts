@@ -1,5 +1,5 @@
 import axios, {AxiosInstance, RawAxiosRequestHeaders} from "axios";
-import {Tokens} from "../../types";
+import {Tokens} from "../types";
 import {toast} from "sonner";
 
 class APIClient {

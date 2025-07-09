@@ -1,8 +1,8 @@
 "use client";
 
-import {Card, CardHeader} from "../../src/components/ui/card";
+import {Card, CardHeader} from "../../components/ui/card";
 import useSWR from "swr";
-import {fetcher} from "../../src/lib/api";
+import {fetcher} from "../../lib/api";
 
 export default function BalanceCard() {
 

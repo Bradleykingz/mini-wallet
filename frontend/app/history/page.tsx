@@ -1,10 +1,10 @@
 "use client";
 
 import TransactionsTable from "./transaction-table";
-import AuthGuard from "../../src/components/auth-guard";
+import AuthGuard from "../../components/auth-guard";
 import useSWR from "swr";
-import {fetcher} from "../../src/lib/api";
-import {Button} from "../../src/components/ui/button";
+import {fetcher} from "../../lib/api";
+import {Button} from "../../components/ui/button";
 
 export default function History() {
 

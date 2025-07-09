@@ -1,10 +1,10 @@
 "use client"
 
 import {useEffect, useState} from "react";
-import {Alert, AlertDescription, AlertTitle} from "../../src/components/ui/alert";
-import {fetcher, getApi} from "../../src/lib/api";
+import {Alert, AlertDescription, AlertTitle} from "../../components/ui/alert";
+import {fetcher, getApi} from "../../lib/api";
 import useSWR from "swr";
-import {Button} from "../../src/components/ui/button";
+import {Button} from "../../components/ui/button";
 import {toast} from "sonner";
 
 type AlertData = {
