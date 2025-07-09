@@ -1,7 +1,6 @@
 import {IWalletRepository} from "./wallet.repository";
 import {InMemoryClient} from "../../platform/in-memory/in-memory.client";
 import {Wallet} from "../../db/schema";
-import {Promise} from "@sinclair/typebox";
 import {IAlertService} from "../alerts/alert.service";
 
 const CACHE_TTL_SECONDS = 60 * 5; // 5 minutes
