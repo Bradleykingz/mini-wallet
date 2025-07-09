@@ -81,18 +81,6 @@ export default function TransactionForm() {
                         </div>
 
                         <div>
-                            <Label htmlFor="recipient">Recipient</Label>
-                            <Input
-                                type="text"
-                                id="recipient"
-                                name="recipient"
-                                required
-                                placeholder="Enter recipient's email or username"
-                                className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
-                            />
-                        </div>
-
-                        <div>
                             <Label htmlFor="amount">Amount</Label>
                             <Input
                                 type="number"
