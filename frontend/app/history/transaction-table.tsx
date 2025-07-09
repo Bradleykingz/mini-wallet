@@ -8,7 +8,7 @@ import {
     TableHeader,
     TableRow,
 } from "../../src/components/ui/table"
-import {Transaction} from "../../../backend/db/schema";
+import {Transaction} from "../../types";
 
 
 export default function TransactionTable({transactions}: { transactions: Transaction[] }) {

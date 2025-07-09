@@ -7,10 +7,10 @@ import {RadioGroup, RadioGroupItem} from "../../src/components/ui/radio-group";
 import {Label} from "../../src/components/ui/label";
 import {getApi} from "../../src/lib/api";
 import {toast} from "sonner";
-import {Wallet} from "../../../backend/db/schema";
 import {mutate} from "swr";
 import {Button} from "../../src/components/ui/button";
 import {Switch} from "../../src/components/ui/switch";
+import {Wallet} from "../../types";
 
 export default function TransactionForm() {
     const [type, setType] = useState<"credit" | "debit">("debit");
