@@ -9,7 +9,7 @@ COPY ../backend/.env ./backend/.env
 WORKDIR /app/backend
 
 RUN npm install && \
-    npm run build:server && \
+    npm build && \
     npm prune --production
 
 # Install dockerize
