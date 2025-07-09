@@ -31,6 +31,7 @@ export function AuthForm({className, ...props}: React.ComponentProps<"div">) {
 
             router.push("/dashboard")
         } catch (e) {
+            console.error(e)
             toast.error("Login failed. Please check your email and password.", {
                 position: "top-right",
             })
@@ -76,7 +77,7 @@ export function AuthForm({className, ...props}: React.ComponentProps<"div">) {
                                     Login
                                 </Button>
                                 <a href={"/register"} className="hover:underline">
-                                    Don't have an account? Register here
+                                    {"Don't"} have an account? Register here
                                 </a>
                             </div>
                         </div>

@@ -36,6 +36,7 @@ export default function TransactionForm() {
             })
             form.reset();
         } catch (error) {
+            console.error(error);
             toast.error("could not perform transaction", {
                 position: "top-right",
             })

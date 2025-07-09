@@ -31,6 +31,7 @@ export function RegistrationForm({className, ...props}: React.ComponentProps<"di
 
             router.push("/dashboard")
         } catch (e) {
+            console.error(e)
             toast.error("Registration failed. Please check your email and password.", {
                 position: "top-right",
             })
