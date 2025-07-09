@@ -31,6 +31,12 @@ Add environment variables in a `.env` file in the root directory.
 
 ```env
 DATABASE_URL=postgres://<username>:<password>@localhost:5432/<database>
+
+# these are used to create the database when running the backend for the first time
+POSTGRES_USER=<your_postgres_user>
+POSTGRES_PASSWORD=<your_postgres_password>
+POSTGRES_DB=<your_postgres_database>
+
 REDIS_URL=redis://localhost:6379
 JWT_SECRET=<your_jwt_secret>
 ```
@@ -44,7 +50,7 @@ cd frontend && npm install && npm run dev
 Build the backend and database containers (ensure you have Docker installed and running)
 
 ```bash
-docker compose up --build
+docker compose -f docker/docker-compose.yml up --build
 ```
 
 ## Tests
@@ -60,7 +66,7 @@ cd backend && npm install && npm test
 The backend can be deployed using docker.
 
 ```bash
-docker compose up --build -d
+docker compose -f docker/docker-compose.yml up --build
 ```
 
 The backend is exposed on port 2450 by default.
