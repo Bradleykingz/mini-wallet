@@ -1,6 +1,7 @@
 import {Db} from '../../db';
 import {NewTransaction, transactions, wallets} from '../../db/schema';
 import {eq} from 'drizzle-orm';
+import * as crypto from "crypto";
 
 export abstract class IWalletRepository {
     /**
