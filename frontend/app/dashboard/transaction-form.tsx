@@ -10,7 +10,7 @@ import {toast} from "sonner";
 import {mutate} from "swr";
 import {Button} from "../../components/ui/button";
 import {Switch} from "../../components/ui/switch";
-import {Wallet} from "../../types";
+import {AxiosError} from "axios";
 
 export default function TransactionForm() {
     const [type, setType] = useState<"credit" | "debit">("debit");
@@ -26,7 +26,12 @@ export default function TransactionForm() {
             const amount = parseFloat(form.amount.value);
             const description = form.description.value;
 
-            const updatedWallet: Wallet = await getApi().transact(amount, type, description || undefined, simulate);
+            const response = await getApi().transact(amount, type, description || undefined, simulate);
+
+            let updatedWallet = response;
+            if (response.updatedWallet) {
+                updatedWallet = response.updatedWallet; // different structure for simulated transactions
+            }
 
             await mutate("/wallet/balance", updatedWallet, false); // Optimistically update the balance
             await mutate("/alerts"); // Refresh alerts
@@ -36,12 +41,12 @@ export default function TransactionForm() {
             })
             form.reset();
         } catch (error) {
+            const message = error instanceof AxiosError ? error.response.data.message : error.message;
             console.error(error);
-            toast.error("could not perform transaction", {
+            toast.error(message, {
                 position: "top-right",
             })
-        }
-        finally {
+        } finally {
             setLoading(false);
         }
     };
@@ -76,7 +81,7 @@ export default function TransactionForm() {
                             <Switch id={"simulate"}
                                     className={"cursor-pointer"}
                                     checked={simulate}
-                                    onCheckedChange={(e)=> setSimulate(e)}
+                                    onCheckedChange={(e) => setSimulate(e)}
                             />
                         </div>
 

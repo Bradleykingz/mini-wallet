@@ -23,13 +23,13 @@ export function RegistrationForm({className, ...props}: React.ComponentProps<"di
         e.preventDefault()
         try {
             const tokens = await getApi().register(email, password)
-            toast.success("Registration successful!", {
+            localStorage.setItem("tokens", JSON.stringify(tokens))
+
+            toast.success("Registration successful! Please login to proceed.", {
                 position: "top-right",
             })
 
-            localStorage.setItem("tokens", JSON.stringify(tokens))
-
-            router.push("/dashboard")
+            router.push("/login")
         } catch (e) {
             console.error(e)
             toast.error("Registration failed. Please check your email and password.", {

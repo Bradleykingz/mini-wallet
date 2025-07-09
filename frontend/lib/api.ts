@@ -59,7 +59,8 @@ class APIClient {
 
     transact(amount: number, type: "credit" | "debit", description?: string, simulate?: boolean) {
         if (simulate){
-            return this.client.post("/mock-provider/transact", {amount, type}).then(res => res.data);
+            const actualType = type === "credit" ? "cash_in" : "cash_out";
+            return this.client.post("/mock-provider/transact", {amount, type: actualType}).then(res => res.data);
         }
         return this.client.post("/wallet/transact/", {amount, type, description, simulate}).then(res => res.data);
     }
