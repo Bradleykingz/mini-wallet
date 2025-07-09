@@ -8,8 +8,9 @@ COPY ../backend/.env ./backend/.env
 
 WORKDIR /app/backend
 
-RUN npm install --omit=dev && \
+RUN npm install && \
     npm run build && \
+    npm prune --production
 
 # Install dockerize
 ADD https://github.com/jwilder/dockerize/releases/download/v0.6.1/dockerize-linux-amd64-v0.6.1.tar.gz /tmp/dockerize.tar.gz
