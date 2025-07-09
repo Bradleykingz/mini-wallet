@@ -1,36 +1,69 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Mini Wallet Management System
+
+Welcome to the Mini Wallet Management System! A lightweight fullstack application designed to help agents manage money
+transfers and stay alerted when balances fall below a certain threshold.
+
+This system is a monorepo that includes a backend built with **Node.js** and **Express**, and a frontend built with *
+*React**. Persistent data is stored in **Postgres**, while **Redis** is used for caching and session management.
+
+It includes the following modules:
+
+1. User Authentication
+    - Register and login functionality
+    - Authentication with jwt. `jwtId` stored in Redis with a 30 minute expiry
+    - Passwords hashed with bcrypt
+
+2. Wallet Management
+    - Real time balance updates, cached in Redis
+    - View last 50 transactions
+    - Supports USD
+
+3. Transaction Management
+    - Cash in and cash out, balance stored and updated atomically in Redis
+
+4. Alert Thresholds
+    - Exposes route that shows alerts for balance < threshold
+    - Shows alerts on dashboard
 
 ## Getting Started
 
-First, run the development server:
+Add environment variables in a `.env` file in the root directory.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+```env
+DATABASE_URL=postgres://<username>:<password>@localhost:5432/<database>
+REDIS_URL=redis://localhost:6379
+JWT_SECRET=<your_jwt_secret>
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Run the frontend
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+cd frontend && npm install && npm run dev
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Build the backend and database containers (ensure you have Docker installed and running)
 
-## Learn More
+```bash
+docker compose up --build
+```
 
-To learn more about Next.js, take a look at the following resources:
+## Tests
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+To run tests
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```bash
+cd backend && npm install && npm test
+```
 
-## Deploy on Vercel
+## Deployment
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+The backend can be deployed using docker.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+docker compose up --build -d
+```
+
+The backend is exposed on port 2450 by default.
+
+The frontend can be deployed separately, as it is a standalone React application. It can be built and served using any
+static file server.

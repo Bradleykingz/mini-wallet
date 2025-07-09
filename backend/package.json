@@ -5,7 +5,8 @@
   "scripts": {
     "dev": "ts-node -P backend/tsconfig.json backend/server.ts",
     "test": "jest backend",
-    "build": "tsc -p backend/tsconfig.json"
+    "build": "tsc -p backend/tsconfig.json",
+    "start": "node dist/server.js"
   },
   "dependencies": {
     "bcrypt": "^6.0.0",
